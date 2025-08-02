@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity6">
+<head>
+    <th:block th:insert="~{fragments/commons :: head}"></th:block>
+    <title>Order</title>
+    <style>
+        table, th, td{
+            border: 1px double black;
+        }
+        .ol-table th, .ol-table td{
+            border: none;
+            width: 30vw;
+        }
+    </style>
+</head>
+<body>
+<th:block th:insert="~{fragments/commons :: nav-bar}"></th:block>
+<th:block th:insert="~{fragments/commons :: side-bar}"></th:block>
+
+<div id="mainField" class="main-field">
+    <div class="sp-ins" id="spare-insertable" style="display: none;"></div>
+    <div id="insertable">
+        <table>
+            <thead>
+            <tr>
+                <td style="width: 70px;">Код заказа</td>
+                <td style="width: 70px">Заказчик</td>
+                <td style="width: 30vw;">Адресс Доставки</td>
+                <td style="width: 30vw">Заказ</td>
+                <td style="width: 100px;">Доступные действия</td>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:object="${orderList}" th:each="order : ${orderList}" th:rowspan="${orderList.size()}">
+                <td>
+                    <div th:text="${order.id.strip()}"></div>
+                </td>
+                <td>
+                    <table class="ol-table">
+                        <tbody>
+                        <tr>
+                            <td><small>Логин: </small><b><span th:text="${order.customer.user.login}"></span></b></td>
+                        </tr>
+                        <tr>
+                            <td><small>Имя: </small><b><span th:text="${order.customer.fName}"></span></b></td>
+                        </tr>
+                        <tr>
+                            <td><small>Фамилия: </small><b><span th:text="${order.customer.lName}"></span></b></td>
+                        </tr>
+                        <tr>
+                            <td><small>Отчество: </small><b><span th:text="${order.customer.fatherName}"></span></b></td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </td>
+                <td th:text="${order.address}"></td>
+                <td>
+                    <table class="ol-table" th:each="oLine : ${order.orderLines}">
+                        <tbody>
+                        <tr class="ol-row">
+                            <td><small>Код товара: </small><span class="pId" th:text="${oLine.productId.trim()}"></span>;
+                            </td>
+                        </tr>
+                        <tr><td th:id="${'p' + oLine.productId.trim()}">Товар: <span class="pNomination"></span><span class="pBrand"></span><span class="pModel"></span></td></tr>
+                        <tr>
+                            <td><small>Количество: </small>
+                                <g><span class="pAmount" th:text="${oLine.quantity}"></span></g>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Стоимость: <i><span class="pPrice" th:text="${oLine.price}"></span></i> ₴</td>
+                        </tr>
+                        <tr>
+                            <td><small>Всего: </small>
+                                <u><span class="pPrice" th:text="${oLine.price * oLine.quantity}"></span> ₴</u>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </td>
+                <td>
+                    <table class="ol-table">
+                        <tbody>
+                            <tr> <td th:text="${order.status + ', status & status.strip == ' + (order.status == order.status.strip())}"></td></tr>
+                            <tr> <td sec:authentication="authorities"></td></tr>
+                            <tr> <td sec:authentication="name"></td></tr>
+                            <tr th:if="${order.status.strip() == 'PROCESSING'}"><td>Processing</td></tr>
+                            <tr th:if="${#authorization.expression('hasRole(''ROLE_USER'')')}"><td>ROLE_USER</td></tr>
+                            <tr>
+                                <td th:if="${(order.status.strip() == 'PROCESSING') && #authorization.expression('hasRole(''ROLE_USER'')')}">
+                                    <button th:onclick="${'javascript:window.location=/shop/orders/renew/' + order.id.trim()}">Изменить</button>
+                                </td>
+                                <td th:if="${#authorization.expression('hasAnyRole({''ROLE_SYSADMIN'', ''ROLE_STAFF''})')}">
+                                    <button th:onclick="${'javascript:window.location=/shop/orders/renew/' + order.id.trim()}">Обновить</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td th:if="${#authorization.expression('hasRole(''ROLE_USER'')') && (order.status.strip() == 'PROCESSING' || order.status.strip() == 'ACCEPTED')}">
+                                    <button th:onclick="${'javascript:window.location=/shop/orders/rm/'+ order.id.trim()}">Отменить</button>
+                                </td>
+                                <td th:if="${#authorization.expression('hasAnyRole({''ROLE_SYSADMIN'', ''ROLE_STAFF''})')}">
+                                    <button th:onclick="'javascript:window.location=/shop/orders/rm/' + ${order.id.trim()}">Отменить</button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script data-th-inline="javascript">
+    const products = [[${goods}]];
+</script>
+
+<script>
+    window.onload = () => {
+        if (top !== window){
+            top.location = window.location;
+        }
+        let allIdElems = Array.from(document.querySelectorAll(".pId"));
+        for (let e of allIdElems) {
+            let product = products.find(o => o.id.trim() === e.innerText);
+            if (!product) {
+                console.warn('Order undefined!');
+                return;
+            }
+            let column = document.querySelector('#p' + e.innerText);
+            let oKeys = ['nomination', 'brand', 'model'];
+            for (let key of oKeys) {
+                if (product[key])
+                Array.from(column.children).find(child => child.className.toLowerCase().includes(key)).innerText =
+                    (typeof product[key] === 'string'
+                        ? (enumsRu[product[key].trim()]? enumsRu[product[key].trim()] : product[key].trim())
+                        : product[key])
+                    + (key === 'model' ? ';' : ', ');
+            }
+        }
+        el('#menu-btn').addEventListener('click', () => activateMenuListener('spare-insertable', true));
+    }
+</script>
+
+<th:block th:insert="~{fragments/commons :: home-btn-and-service-script}"></th:block>
+</body>
+</html>

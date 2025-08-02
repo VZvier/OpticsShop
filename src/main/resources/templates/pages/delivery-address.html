@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <th:block th:insert="~{fragments/commons :: head}"></th:block>
+    <title>Адресс доставки</title>
+  <style>
+    body {
+      width: 100%;
+      height: 100%;
+      align-content: center;
+      justify-items: center;
+    }
+
+    .address-form {
+      width: 40vw;
+      height: auto;
+      background-color: white;
+      padding: 10px 10px 10px 10px;
+      border: 4px double black;
+      border-radius: 10px;
+      box-shadow: 3px 4px 5px;
+      justify-items: center;
+    }
+
+    .address-form input {
+      width: 30vw;
+      border-radius: 5px;
+      margin-block-end: 5px;
+    }
+
+    .address-form label {
+      display: grid;
+      width: 31vw;
+    }
+
+    .address-form p {
+      margin-block-start: 0;
+      margin-block-end: 0;
+    }
+
+    .btn-save {
+      background-color: lightgreen;
+      width: 8rem;
+      height: 30px;
+      border: 2px white;
+      border-radius: 5px;
+      font-size: 12px;
+    }
+
+    .btn-save:hover {
+      background-color: green;
+      color: white;
+      border: 3px white;
+      border-radius: 5px;
+      box-shadow: 4px 4px 2px black;
+    }
+
+    .btn-save[disabled="true"]:hover {
+      background-color: lightgreen;
+      width: 30vw;
+      height: 26px;
+      border: 2px white;
+      border-radius: 5px;
+      font-size: 12px;
+    }
+
+    .main-field {
+      background-color: lightgray;
+      align-content: center;
+      justify-items: center;
+    }
+  </style>
+</head>
+<body>
+
+<th:block th:insert="~{fragments/commons :: nav-bar}"></th:block>
+<th:block th:insert="~{fragments/commons :: side-bar}"></th:block>
+
+<div class="main-field" id="mainField">
+  <div id="spare-insertable"></div>
+  <form class="address-form" action="/" onchange="checkInput()">
+    <label for="deliveryService">Достака: </label>
+    <select style="width: 30vw; margin-block-end: 10px;" id="deliveryService">
+      <option value="Новая Почта">Новая Почта</option>
+      <option value="УкрПочта">Укрпочта</option>
+      <option value="Mist Express">MistExpress</option>
+    </select>
+    <label for="deliveryType">Выберите тип доставки: </label>
+    <select style="width: 30vw; margin-block-end: 10px;" id="deliveryType">
+      <option value="В отделение">В отделение</option>
+      <option value="В почтомат">В почтомат</option>
+      <option value="Курьером">Курьером</option>
+    </select>
+    <label for="country">Страна: </label><input disabled id="country" value="Украина">
+    <label for="region">Область: </label><input id="region" placeholder="Область">
+    <label for="city">Город/раён: </label><input id="city" placeholder="Город">
+    <label for="settlement">Населенный пункт: </label><input id="settlement" placeholder="Нас. пункт">
+    <label for="deliveryDepartment">Номер отделения: </label><input id="deliveryDepartment" placeholder="Отделение">
+    <label for="parcelTerminal">Почтомат: </label><input id="parcelTerminal" placeholder="Почтомат">
+    <label for="street">Улица: </label><input id="street" placeholder="Улица">
+    <label for="apartment">Дом (дом, квартира): </label><input id="apartment" placeholder="Дом">
+    <br>
+    <button disabled class="btn-save" onclick="fetchForm()">Подтвердить адресс и заказать</button>
+  </form>
+</div>
+
+<th:block th:insert="~{fragments/commons :: home-btn-and-service-script}"></th:block>
+
+<script data-th-inline="javascript">
+  const customer = [[ ${ customer } ]];
+</script>
+
+<script>
+
+  let storage = localStorage;
+
+  window.onload = () => {
+    showHideFormFields();
+    document.querySelector('.address-form').addEventListener('change', () => checkInput());
+    document.querySelector('#deliveryService').addEventListener('change', showHideFormFields);
+    document.querySelector('#deliveryType').addEventListener('change', showHideFormFields);
+    if (customer && customer?.address){
+      let address = customer.address;
+      let formInputs = Array.from(document.querySelectorAll('.address-form input'));
+      let formSelect = Array.from(document.querySelectorAll('.address-form select'));
+      for (let e of formInputs){
+        if (address[e.id]) {
+          e.value = typeof address[e.id] === 'string' ? address[e.id].trim() : address[e.id] ;
+        }
+      }
+      for(let e of formSelect){
+        if (address[e.id]) {
+          let options = Array.from(e.options);
+          let i = options.indexOf(options.find(o => o.value === (typeof address[e.id] === 'string'
+                  ? address[e.id].trim() : address[e.id])));
+          console.log("Index = " + i);
+          if (i !== -1) {
+            e.options[i].selected = true;
+          }
+        }
+      }
+    }
+    document.querySelector('#menu-btn').addEventListener('click', () => activateMenuListener('spare-insertable', true));
+  }
+
+  function checkInput(){
+    console.log("Start checkInput()!")
+    let inpElems = Array.from(document.querySelectorAll('.address-form input[style="display:block"]'))
+            .filter(e => !e.disabled);
+    let correctInputsCount = 0;
+    for (let e of inpElems){
+      if (!e.value) {
+        console.log("!E.val - return !")
+        return;
+      }
+        if (e.id !== 'apartment' && e.value.match(/[а-яА-Я. ,-]+/ig)){
+        correctInputsCount++;
+      } else {
+        if (e.id === 'apartment' && e.value.match(/[\d\\/-а-яА-Я]+/ig)){
+          correctInputsCount++;
+        }
+      }
+    }
+    console.log("Все элементы соответствуют уловиям - " + inpElems.length !== correctInputsCount + "!")
+    document.querySelector('.btn-save').disabled = inpElems.length !== correctInputsCount;
+  }
+
+  function showHideFormFields(){
+    let delServ = document.querySelector('#deliveryService');
+    let delType = document.querySelector('#deliveryType');
+    let inputs = Array.from(document.querySelectorAll('.address-form input'));
+    inputs.forEach(i=> {
+      i.style.display = 'block';
+      document.querySelector(`label[for=${i.id}]`).style.display = 'block';
+    });
+    if (delServ.value === 'Mist Express'){
+      delType.children[0].selected = true;
+      delType.children[1].style.display = 'none';
+      delType.children[2].style.display = 'none';
+    } else {
+      for (let child of Array.from(delType.children)){
+        child.style.display = 'block';
+      }
+    }
+    let idToBeHidden;
+    switch (delType.value) {
+      case 'В отделение': idToBeHidden = ['street', 'apartment', 'parcelTerminal'];
+        break;
+      case 'Курьером': idToBeHidden = ['deliveryDepartment', 'parcelTerminal'];
+        break;
+      case 'В почтомат': idToBeHidden = ['street', 'deliveryDepartment', 'apartment'];
+        break;
+      default:
+        break;
+    }
+    idToBeHidden.forEach(id => {
+      document.querySelector('#' + id).style.display = 'none';
+      document.querySelector(`label[for=${id}]`).style.display = 'none';
+    });
+  }
+
+  async function fetchForm(){
+    let form = new FormData;
+    let address = {};
+    let elements = Array.from(document.querySelectorAll('.address-form input, .address-form select'))
+            .filter(o => o.style.display !== 'none');
+    for (let e of elements){
+      form.append(e.id, e.value);
+      address[e.id] = e.value;
+    }
+    form.append('address', address);
+    let promise = await fetch(`/shop/api/users/address/renew/${customer.id}`, {
+      method: 'PUT',
+      headers: {'contentType': 'application/json'},
+      body: form
+    });
+    if (promise.ok){
+      await window.location.reload();
+    }
+  }
+
+</script>
+
+</body>
+</html>

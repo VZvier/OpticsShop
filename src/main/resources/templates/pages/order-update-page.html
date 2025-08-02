@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <th:block th:insert="~{fragments/commons :: head}"></th:block>
+    <title>Обновить заказ</title>
+</head>
+<body>
+<th:block th:insert="~{fragments/commons :: nav-bar}"></th:block>
+<th:block th:insert="~{fragments/commons :: side-bar}"></th:block>
+
+<div class="main-field" id="mainField">
+    <div class="sp-ins" id="spare-insertable"></div>
+  <div id="insertable">
+      <table>
+          <thead>
+            <tr>
+                <td>Изображение</td>
+                <td>Продукт</td>
+                <td>Цена</td>
+                <td>Количество</td>
+                <td>Всего</td>
+                <td>Дествия</td>
+            </tr>
+          </thead>
+          <tbody>
+            <tr th:object="${order}" th:each="ol : ${order.orderLines}" th:rowspan="${order.orderLines.size()}">
+                <td class="pImg" th:name="${order.id.trim()}"></td>
+                <td th:text="${order.id.trim()}"></td>
+                <td th:text></td>
+                <td></td>
+                <td></td>
+            </tr>
+          </tbody>
+      </table>
+  </div>
+</div>
+
+<th:block th:insert="~{fragments/commons :: home-btn-and-service-script}"></th:block>
+
+<script>
+    window.onload = () => {
+        if (top !== window){
+            top.location = window.location;
+        }
+        document.querySelector('#menu-btn').addEventListener('click', () => activateMenuListener('spare-insertable', false));
+    }
+</script>
+
+</body>
+</html>

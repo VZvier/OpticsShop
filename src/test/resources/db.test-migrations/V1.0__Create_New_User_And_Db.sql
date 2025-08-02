@@ -1,0 +1,15 @@
+CREATE ROLE "Admin" WITH
+    LOGIN
+    SUPERUSER
+    INHERIT
+    CREATEDB
+    CREATEROLE
+    REPLICATION
+    PASSWORD '1234';
+
+CREATE DATABASE "optics" WITH
+    OWNER = "Admin"
+    ENCODING = 'UTF8'
+    TABLESPACE = pg_default
+    CONNECTION LIMIT = -1
+    IS_TEMPLATE = False;

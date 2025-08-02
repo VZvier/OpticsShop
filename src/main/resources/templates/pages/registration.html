@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <th:block th:insert="~{fragments/commons :: head}"></th:block>
+    <title>ASPECT/Регистрация</title>
+    <style>
+        body {
+            width: 100%;
+            height: 100%;
+            align-content: center;
+            justify-items: center;
+        }
+
+        .registration-form {
+            width: 40vw;
+            height: auto;
+            background-color: white;
+            padding: 10px 10px 10px 10px;
+            border: 4px double black;
+            border-radius: 10px;
+            box-shadow: 3px 4px 5px;
+            justify-items: center;
+        }
+
+        .registration-form input {
+            width: 30vw;
+            border-radius: 5px;
+            margin-block-end: 5px;
+        }
+
+        .registration-form label {
+            display: grid;
+            width: 31vw;
+        }
+
+        .registration-form p {
+            margin-block-start: 0;
+            margin-block-end: 0;
+        }
+
+        .btn-save {
+            background-color: lightgreen;
+            width: 30vw;
+            height: 26px;
+            border: 2px white;
+            border-radius: 5px;
+            font-size: 12px;
+        }
+
+        .btn-save:hover {
+            background-color: green;
+            color: white;
+            border: 3px white;
+            border-radius: 5px;
+            box-shadow: 4px 4px 2px black;
+        }
+
+        .btn-save[disabled="true"]:hover {
+            background-color: lightgreen;
+            width: 30vw;
+            height: 26px;
+            border: 2px white;
+            border-radius: 5px;
+            font-size: 12px;
+        }
+
+        .main-field {
+            background-color: lightgray;
+            align-content: center;
+            justify-items: center;
+        }
+
+        #menu-btn{
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+<th:block th:insert="~{fragments/commons :: nav-bar}"></th:block>
+
+<div class="main-field" id="mainField">
+    <div class="registration-form">
+        <form class="form-registration" action="/shop/api/users/login">
+            <h3 style="justify-self: center">РЕГИСТРАЦИЯ</h3>
+            <label for="login">Имя пользователя: </label>
+            <input id="login" onchange="checkLogin(this)" type="text" placeholder="Логин">
+            <label for="pass">Пароль: </label>
+            <p title="Мин. 6 символов [a-z, A-Z] и содержать миниму 2 цифры [0-9]!">
+                <input id="pass" type="password" onchange="checkPassword(this)" autocomplete="off" placeholder="Пароль">
+            </p>
+            <label for="passConf">Подтвердить пароль: </label>
+            <p title="Мин 6 символов из которых мин. 2 цифры и совпадать с полем пароль!">
+                <input id="passConf" type="password" onchange="checkConfirm(this)" autocomplete="off"
+                       placeholder="Пароль">
+            </p>
+            <label for="authority" th:style="${#authorization.expression('hasAnyRole({''ROLE_STAFF'',''ROLE_SYSADMIN''})') ? 'display:' : 'display:none'}">Role</label>
+            <select  th:style="${#authorization.expression('hasAnyRole({''ROLE_STAFF'',''ROLE_SYSADMIN''})') ? 'display:' : 'display:none'}" id="authority">
+                <option selected value="ROLE_USER">Пользователь</option>
+                <option th:style="${#authorization.expression('hasAnyRole({''ROLE_STAFF'',''ROLE_SYSADMIN''})') ? 'display:' : 'display:none'}" value="ROLE_STAFF">Персонал</option>
+                <option th:style="${#authorization.expression('hasRole(''ROLE_SYSADMIN'')') ? 'display:' : 'display: none'}" value="ROLE_SYSADMIN">Сис.Администратор</option>
+            </select>
+            <label for="name">Имя: </label>
+            <input id="name" type="text" placeholder="Имя">
+            <label for="surname">Фамилия: </label>
+            <input id="surname" type="text" placeholder="Фамилия">
+            <label for="fatherName">Отчество: </label>
+            <input id="fatherName" type="text" placeholder="Отчество">
+            <label for="born">Дата рождения: </label>
+            <input id="born" type="date"/>
+
+            <label for="phone">Телефон: </label><input type="tel" id="phone" onchange="checkPhone(this)"
+                                                       placeholder="Телефон">
+            <label for="email">E-mail: </label><input type="email" id="email" onchange="checkEmail(this)"
+                                                      placeholder="Ваш@email">
+            <br><br>
+            <button th:if="${#authorization.expression('hasRole(''ROLE_ANONYMOUS'')')}" class="btn-save" disabled onclick="registerUser(document.querySelector('#authority').value); history.back();">Создать профиль</button>
+            <button th:if="${#authorization.expression('hasAnyRole({''ROLE_STAFF'', ''ROLE_SYSADMIN''})')}" class="btn-save" onclick="createNewUser(document.querySelector('#authority').value);">Создать профиль</button>
+            <br><br>
+            <span>Уже зарегестрирован? <a href="/shop/api/users/login">Войти</a></span>
+            <br>
+        </form>
+    </div>
+</div>
+
+<th:block th:insert="~{fragments/commons :: home-btn-and-service-script}"></th:block>
+<script>
+
+    window.onload = () => {
+        if (window !== top){
+            window.location = top.location;
+        }
+        document.querySelector('#menu-btn').addEventListener('click', () => activateMenuListener('spare-insertable', true));
+    }
+    async function checkLogin(target) {
+        let response;
+        let val = target.value.match(/[\w+0-9-_@$]+/ig).toString();
+        if (val && target.value.length === val.length) {
+            let promise = await fetch('/shop/data/login/' + target.value);
+            await promise.json().then(data => response = data);
+        }
+        showValidation(target.id, response);
+    }
+
+    async function checkEmail(target) {
+        let response;
+        let valid;
+        let promise = await fetch('/shop/data/email/' + target.value);
+        await promise.json().then(data => response = data);
+        if (response && target.value.match(/[a-zA-Z0-9\-_]+@\w+\.\w+/)) {
+            valid = response;
+        } else {
+            valid = false;
+        }
+        showValidation(target.id, valid);
+    }
+
+    function checkPassword(target) {
+        if (!target?.value) return;
+        let val = target.value;
+        let res = (val.match(/[0-9]/g)?.length > 1 && val.match(/[a-z, A-Z]/ig) && !val.match(/[\\.,&$%#@!*^}{]+/ig) && val.length > 5);
+
+        showValidation(target.id, res)
+    }
+
+    function checkConfirm(target) {
+        if (!target?.value) return;
+        let val = target.value;
+        let res = (val.match(/[0-9]/g)?.length > 1 && val.match(/[a-z, A-Z]/ig)
+            && !val.match(/[\\.,&$%#@!*^}{]+/ig) && val.length > 5 &&
+            document.querySelector('#pass').value === val);
+        showValidation(target.id, res);
+    }
+
+    async function checkPhone(target) {
+        if (!target?.value) return;
+        let val = target.value;
+        let res = (val.replace(/\D/g, '')?.length === 12);
+        if (res) {
+            await fetch(`/shop/data/phone/${val.replace(/\D/g, '')}`)
+                .then(promise => promise.json()).then(response => res = response);
+        }
+        showValidation(target.id, res)
+    }
+
+    function showValidation(id, valid) {
+        let label = document.querySelector(`label[for="${id}"]`);
+        let text = document.querySelector(`label[for="${id}"]`).textContent;
+        text = text.substring(0, text.indexOf(':') + 1);
+        label.innerText = text + (valid ? "✔️" : "❌");
+        checkAllValidations();
+    }
+
+    function checkAllValidations() {
+        let allFormInputs = Array.from(document.querySelectorAll('.form-registration input'));
+        let validCount = 0;
+        for (let input of allFormInputs) {
+            validCount += document.querySelector(`.form-registration label[for="${input.id}"]`).textContent.includes('✔️') ? 1 : 0;
+        }
+        document.querySelector('.btn-save').disabled = validCount !== 5;
+    }
+
+    function registerUser() {
+        let form = new FormData;
+        let elements = Array.from(document.querySelectorAll('.form-registration input'));
+        console.log("SaveUser(): got input elements: " + elements.length);
+        for (let e of elements) {
+            if (e.id !== 'passConf') {
+                console.log("Field : " + e.id + ", Value: " + (e.id === 'phone' ? +(e.value.replace(/\D+/, '')) : e.value))
+                form.append(e.id, (e.id === 'phone' ? +(e.value.replace(/\D+/, '')) : e.value));
+            }
+        }
+        form.append('roles', 'ROLE_USER');
+        let response = fetch('/shop/api/users/registration', {
+            method: 'POST',
+            headers: {'contentType': 'application/json'},
+            body: form
+        });
+        if (response) {
+            try {
+                document.querySelector('.form-registration').send();
+                console.log("SEND!");
+                document.querySelector('.form-registration').submit();
+                console.log("Submit!");
+            } catch (e) {
+                console.log("Fetch url: '/shop/api/users/login', failed!")
+            }
+        } else {
+            console.log("Response to url: '/shop/api/users/registration' method: 'POST': " + response)
+        }
+    }
+
+    function createNewUser(role){
+        // const xhr = new XMLHttpRequest();
+        const form = new FormData;
+        let inputElems = Array.from(document.querySelectorAll('.form-registration input'));
+        for (let e of inputElems){
+            if (!['pass', 'passConf'].includes(e.id))
+            form.append(e.id, e.value);
+        }
+        form.append('roles', role);
+        // xhr.open('post', '/shop/api/users/new');
+        // xhr.send(form);
+        // xhr.onreadystatechange = () => {
+        //     if (xhr.readyState === 4 && xhr.status === 200){
+        //         document.querySelector('#createdUserData #userLogin')
+        //         document.querySelector('#createdUserData #userPassword')
+        //     }
+        // }
+        let response = fetch('/shop/api/users/new', {
+            method: 'POST',
+            headers:{'contentType': 'application/json'},
+            body: form
+        });
+        if (response){
+            return window.location.href='/';
+        }
+    }
+</script>
+
+</body>
+</html>

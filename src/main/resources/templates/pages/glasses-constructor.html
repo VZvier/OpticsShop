@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <th:block th:insert="~{fragments/commons :: head}"></th:block>
+    <title>Glasses-constructor</title>
+    <style>
+        body{
+            overflow: scroll;
+            justify-items: center;
+            scrollbar-width: none;
+        }
+
+        .div-constructor {
+            position: absolute;
+            left: 15vw;
+            right: 40vw;
+            top: 0;
+            padding: 10px 10px 10px 20px;
+            box-shadow: 4px 6px 8px;
+            background-color: lightgrey;
+        }
+
+        .frame {
+            width: 30vw;
+            margin: 5px 0 5px 0;
+        }
+
+        .osLens, .odLens {
+            width: 40vw;
+            margin: 0 15px 15px 0;
+        }
+
+        .osLens select, .odLens select, .frame select {
+            width: 37vw;
+        }
+
+        .osLens label, .odLens label, .frame label {
+            width: 38vw;
+            margin: 10px 5px 10px 0;
+        }
+
+        .form-inline input {
+            width: 36vw;
+        }
+
+        .form-inline h3 {
+            margin-bottom: 6px;
+        }
+
+        .frame-viewer-label, .os-viewer-label, .od-viewer-label {
+            position: absolute;
+            left: max(250px, 52vw);
+            width: 130px !important;
+            background-color: lightgoldenrodyellow;
+        }
+        .frame-viewer-label{
+            top: 9rem;
+        }
+        .os-viewer-label{
+            top: 25rem;
+        }
+        .od-viewer-label{
+            top: 39rem;
+        }
+
+        #frame-viewer, #odLens-viewer, #osLens-viewer {
+            position: absolute;
+            left: max(250px, 50vw);
+            width: 232px;
+            height: 160px;
+            overflow-y: scroll;
+            margin-left: 0;
+            border: 3px double blue;
+            border-radius: 8px;
+            padding: 1px 1px 1px 10px;
+            overflow-x: hidden;
+            scrollbar-width: thin;
+        }
+
+        #frame-viewer li, #odLens-viewer li, #osLens-viewer li{
+            position: relative;
+        }
+
+        .viewer-img {
+            width: 100px;
+            height: 70px;
+            z-index: 99;
+        }
+
+        .selected-img {
+            z-index: 100;
+        }
+
+        #frame-viewer {
+            top: 10rem;
+        }
+
+        #osLens-viewer {
+            top: 26rem;
+        }
+
+        #odLens-viewer {
+            top: 40rem;
+        }
+
+        #frame-viewer li, #odLens-viewer li, #osLens-viewer li {
+            display: block;
+            padding: 3px;
+            border: 1px solid #888;
+            width: 210px;
+            height: 70px;
+            cursor: pointer;
+            margin-block-end: 3px;
+        }
+
+        #frame-viewer a, #odLens-viewer a, #osLens-viewer a {
+            text-decoration: none;
+        }
+
+        .signSelected {
+            position: absolute;
+            left: 0;
+            top: 65px;
+            width: 14px;
+            height: 14px;
+            border-radius: 20px;
+            font-size: small;
+        }
+
+        .card::after {
+            content: '';
+            clear: both;
+            display: table;
+        }
+
+        .pic {
+            float: left;
+            width: 100px;
+            height: 70px;
+        }
+
+        .product-info{
+            width: 110px;
+            height: 70px;
+            overflow: hidden;
+            font-size: smaller;
+        }
+
+        .viewer-label{
+            position: absolute;
+            top: 20px;
+        }
+    </style>
+</head>
+<body>
+
+<th:block th:insert="~{fragments/commons :: nav-bar}"></th:block>
+<th:block th:insert="~{fragments/commons :: side-bar}"></th:block>
+
+<div id="mainField" class="main-field">
+    <div class="container">
+        <div id="spare-insertable"></div>
+        <div id="insertable">
+            <div class="div-constructor">
+                <h3>ОЧКИ ПОД ЗАКАЗ</h3>
+                <label for="workPrice">Цена работы грн:</label>
+                <input type="text" id="workPrice" name="price" disabled value="200,00">
+                <h3>Оправа:</h3>
+                <div class="frame">
+                    <label for="frameTypeInForm">Тип Оправы:</label>
+                    <select id="frameTypeInForm" name="frameType">
+                        <option selected value="none">-не выбрано-</option>
+                    </select>
+                    <input style="display: none" id="frameId" name="id">
+                    <label for="frameSizeInForm">Размер:</label>
+                    <select id="frameSizeInForm" name="frameSize">
+                        <option selected value="none">-не выбрано-</option>
+                    </select>
+                    <label for="genderInForm">Для(пол):</label>
+                    <select id="genderInForm" name="gender">
+                        <option selected value="none">-не выбрано-</option>
+                    </select>
+                    <label for="brandInForm">Производитель:</label>
+                    <select id="brandInForm" name="brand">
+                        <option selected value="none">-не выбрано-</option>
+                    </select>
+                    <label for="modelInForm">Модель:</label>
+                    <select id="modelInForm" name="model">
+                        <option selected value="none">-не выбрано-</option>
+                    </select>
+                    <br>
+                    <label for="framePrice">Цена:</label><br>
+                    <input type="text" disabled name="price" id="framePrice">
+                    <label class="frame-viewer-label">Выберите оправу:</label>
+                    <ul id="frame-viewer"></ul>
+                </div>
+                <h3>Левая линза:</h3>
+                <div class="osLens">
+                    <label for="lensTypeOs">Тип линзы:</label>
+                    <select id="lensTypeOs" name="lensType">
+                        <option selected value="none">-не выбрано-</option>
+                    </select>
+                    <input style="display: none" id="osLensId" name="id">
+                    <label for="spOs">Сфера:</label>
+                    <select id="spOs" name="sp">
+                        <option selected value="none">-не выбрано-</option>
+                    </select>
+                    <label for="cylOs">Цылиндр:</label>
+                    <select id="cylOs" name="cyl">
+                        <option selected value="none">-не выбрано-</option>
+                    </select>
+                    <br>
+                    <label for="osLensPrice">Цена:</label><br><input type="text" disabled name="price" id="osLensPrice">
+                    <br>
+                    <label style="display: none;" for="osLensAngle">Угол:</label>
+                    <br>
+                    <input style="display: none;" id="osLensAngle" name="osAngle">
+                    <label class="os-viewer-label">Выберите OS линзу:</label>
+                    <ul id="osLens-viewer"></ul>
+                </div>
+                <h3>Правая линза:</h3>
+                <div class="odLens">
+                    <label for="lensTypeOd">Тип линзы:</label>
+                    <select id="lensTypeOd" name="lensType">
+                        <option selected value="none">-не выбрано-</option>
+                    </select>
+                    <input style="display: none" id="odLensId" name="id">
+                    <label for="spOd">Сфера:</label>
+                    <select id="spOd" name="sp">
+                        <option selected value="none">-не выбрано-</option>
+                    </select>
+                    <label for="cylOd">Цылиндр:</label>
+                    <select id="cylOd" name="cyl">
+                        <option selected value="none">-не выбрано-</option>
+                    </select>
+                    <br>
+                    <label for="odLensPrice">Цена:</label><br><input type="text" disabled name="price" id="odLensPrice">
+                    <br>
+                    <label style="display: none;" for="odLensAngle">Угол:</label>
+                    <br>
+                    <input style="display: none;" id="odLensAngle" name="odAngle">
+                    <label class="od-viewer-label">Выберите OD линзу:</label>
+                    <ul id="odLens-viewer"></ul>
+                </div>
+                <label style="display: block;" for="distance">Расстояние(мм):</label>
+                <input type="number" id="distance" name placeholder="Расстояние"/>
+                <label style="display: block;" for="amount">Количество:</label>
+                <input type="number" id="amount" name="amount" placeholder="Количество"/>
+                <label style="display: block;" for="constructorTotal">Цена (грн.):</label>
+                <input disabled id="constructorTotal" />
+                <br><br>
+                <button type="button" onclick="addConstructorToBasket()">Создать</button>
+                <button type="button" onclick="window.location.reload()">Сброс</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<th:block th:insert="~{fragments/commons :: home-btn-and-service-script}"></th:block>
+
+<script data-th-inline="javascript">
+    const productList = [[${products}]];
+</script>
+<script>
+
+    let frameList = productList.filter(p => p.nomination.includes('frame'));
+    let odLensList = productList.filter(p => p.nomination.includes('lens'));
+    let osLensList = productList.filter(p => p.nomination.includes('lens'));
+
+    let goods = {
+        frame: frameList,
+        odLens: odLensList,
+        osLens: osLensList
+    }
+
+    window.onload = () => {
+        loadMainFunctions();
+        if (productList) {
+            const parts = ['frame', 'odLens', 'osLens'];
+            for (let id of parts) {
+                fillOptions(id);
+            }
+            fillViewers(productList);
+        }
+        Array.from(document.querySelectorAll('.div-constructor select')).forEach(e => {
+            e.addEventListener('change', () => fillOptions(e.parentElement.className, e));
+        });
+        if (storage.getItem('workPrice')){
+            document.querySelector('#workPrice').value = storage.getItem('workPrice');
+        }
+        el('menu-btn').addEventListener('click', () => activateMenuListener('spare-insertable', true));
+    }
+
+    function filterProducts(productArray, className){
+        const elements = Array.from(document.querySelectorAll(`.${className} select`));
+        let filtered = productArray;
+        for (let e of elements){
+            filtered = filtered.filter(p => e.value === 'none' ? true :
+                (typeof p[e.name] === 'string' && (p[e.name].trim() === e.value) || p[e.name] === e.value));
+        }
+        return filtered;
+    }
+
+    function fillOptions(className, target) {
+        let subProducts = goods[className];
+        let filtered = subProducts;
+        filtered = filterProductsForOptions(filtered, target, className);
+        if (target && target.value && target.value !== 'none') {
+            filtered = filterProducts(subProducts, className);
+        }
+        fillViewers(filtered, (className + '-viewer' ));
+    }
+
+    function filterProductsForOptions(filtered, target, className){
+        for (let e of Array.from(document.querySelectorAll(`.${className} select`))) {
+            let isValue = !target ? e.value && e.value !== 'none'
+                    : e.value && e.value !== 'none' ;
+            filtered = filtered.filter(p => isValue
+                ? ( p[e.name].trim() === e.value && !isBefore(e, target))
+                : true);
+            let emptyOption = create('option', {value: 'none', text: '-не выбрано-'});
+            let forOptions = target && e.name.includes('Type') ? goods[className] : filtered;
+            let selectedVal = e.value && e.value !== 'none' ? e.options[e.options.selectedIndex].value : 'none';
+
+            let options = makeElementOptions((forOptions ? forOptions : goods[className]), e, selectedVal);
+            if (e.name === 'brand') console.log("Element: " + e.name + ', value: ' + e.value);
+            if (e.options.length >= 1) {
+                e.innerHTML = '';
+            }
+            if (selectedVal === 'none') {
+                emptyOption.selected = true;
+            }
+            e.appendChild(emptyOption)
+            if (options.length < 1 && e?.options.length < 2) {
+                options = makeElementOptions(filterProducts(goods[className], className), e, selectedVal);
+            }
+            options.forEach(o => e.appendChild(o));
+        }
+        return filtered;
+    }
+
+    function isBefore(elem, target){
+        let current = target.previousElementSibling;
+        while (current) {
+            if (current === elem) {
+                return true;
+            }
+            current = current.previousElementSibling;
+        }
+        return false;
+    }
+
+    function makeElementOptions(goods, elem, selectedVal){
+        let values = [];
+        let options = [];
+        let selectedPresence = null;
+        goods.forEach(p => {
+            let val = typeof p[elem.name] === "string" ? p[elem.name].trim() : p[elem.name];
+            if(!values.includes(val) ){
+                if(selectedVal !== val) {
+                    values.push(val);
+                    options.push(create('option', {value: val, text: enumsRu[val] ? enumsRu[val] : val}));
+                } else {
+                    if(!selectedPresence) {
+                        values.push(selectedVal);
+                        options.push(create('option', {
+                            value: selectedVal,
+                            text: enumsRu[selectedVal] ? enumsRu[selectedVal] : selectedVal,
+                            selected: true
+                        }));
+                        selectedPresence = val;
+                    }
+                }
+            }
+        });
+        return options;
+    }
+
+    function fillViewers(products, partId) {
+        let viewIds = !partId ? ['frame-viewer', 'odLens-viewer', 'osLens-viewer'] : [partId];
+        if (products) {
+            for (let id of viewIds) {
+                const viewer = document.querySelector('#' + id);
+                const nomination = id.includes('frame') ? 'frame' : 'lens';
+                let productsForView = products
+                    .filter(p => p['nomination'].includes(nomination));
+                viewer.innerHTML = '';
+                for (let p of productsForView) {
+                    let description = (enumsRu[p.nomination.trim()] ? enumsRu[p.nomination.trim()] : p.nomination)
+                            + ': ' + (p.brand.trim()) + (p.model ? ', модель: ' + p.model.trim() : '')
+                            + (p.frameType ? ', тип: ' + (enumsRu[p.frameType] ? enumsRu[p.frameType] : p.frameType) : '')
+                            + (p.frameSize ? ', размер: ' + (enumsRu[p.frameSize] ? enumsRu[p.frameSize] : p.frameSize ): '')
+                            + (p.gender ? ', для: ' + (enumsRu[p.gender] ? enumsRu[p.gender] : p.gender) : '')
+                            + (p.lensType ? ', линза: ' + (enumsRu[p.lensType] ? enumsRu[p.lensType] : p.lensType) : '')
+                            + (p.sp ? ', сфера: ' + p.sp : '') + (p.cyl ? ', цилиндр: ' + p.cyl : '');
+                    let infoDiv = create('div', {innerText: description, className: 'product-info'});
+                    let pic = p['pictures'] ? p['pictures'][0] : null;
+                    let bgUrl = p['pictures'] ? `data:${pic['type'].trim()};base64,${pic.content}` : '/no-image.png';
+                    let img = create('img', { alt: p['id'] + pic.name, src: bgUrl, className: 'pic' });
+
+                    let li = create('li', {
+                        id: `${p['id'].trim()}-${partId},
+                                + ((id.includes('osLens') || id.includes('odLens')) ? '-' + id.split('-')[1] : '')}`,
+                        style: {background: 'url(' + bgUrl + ') no-repeat center center', backgroundSize: '20vw'},
+                        className: 'card',
+                        onclick: () => fillFieldsBySelectedProduct(li)
+                    });
+                    let span = create('span', {id: li.id + '-span', className: 'signSelected', innerText: '✓'});
+                    span.style.display = 'none';
+                    li.append(img, span, infoDiv);
+                    viewer.appendChild(li);
+                }
+            }
+        }
+    }
+
+    function fillFieldsBySelectedProduct(target) {
+        let id = target.id.split('-')[0];
+        let partId = target.parentElement.id.split('-')[0];
+        let products = goods[partId];
+        let found = products.find(p => p.id.includes(id));
+        Array.from(document.querySelectorAll(`.${partId} select`)).forEach(e => {
+            let options = Array.from(e.options);
+            console.log('Options: ' + options.length + ', search: ' + found[e.name]);
+            let option = options.find(o => o.value === found[e.name].trim());
+            let optionI = options.findIndex(o => o.value === found[e.name].trim());
+            console.log("Option: " + option.value + ' text: ' + option.textContent + ' index: ' + optionI);
+            if (option){
+                console.log('Found option!');
+                e.options[options.indexOf(option)].selected = true;
+            }
+            if (optionI){
+                console.log('Found index!')
+                e.options[optionI].selected = true;
+            }
+        });
+        target.closest('div').querySelector('input[name="id"]').value = found.id.trim();
+        target.closest('div').querySelector('input[name="price"]').value = found.price.trim();
+        if (partId.includes('Lens')) {
+            if ( ![0, '0', null, 'null'].includes(found.cyl.trim())) {
+                console.log('Found cyl: ' + found.cyl + ' !includes : ' + (![0, '0', null, 'null'].includes(found.cyl.trim())));
+                el(partId + 'Angle').style.display = '';
+                getLabel(partId + 'Angle').style.display = '';
+            } else {
+                el(partId + 'Angle').style.display = 'none';
+                getLabel(partId + 'Angle').style.display = 'none';
+            }
+        }
+        let prices = Array.from(document.querySelectorAll('input[name="price"]'));
+        let total = 0;
+        prices.forEach(e => total += e.value ? +(e.value.substring(0, e.value.length - 3)) : 0);
+        total = total + ',00'
+        document.querySelector('#constructorTotal').value = total;
+    }
+
+    function addConstructorToBasket(){
+        let constructors = [];
+        if (storage.getItem('constructors')) {
+            constructors = JSON.parse(storage.getItem('constructors'));
+        }
+        let inputs = Array.from(document.querySelectorAll('.div-constructor input'))
+                .filter(e => e.value);
+        let constructor;
+        let od = Array.from(document.querySelectorAll('#spOs, #cylOs')).find(val => val !== '0');
+        let os = Array.from(document.querySelectorAll('#spOd, #cylOd')).find(val => val !== '0');
+        let odAngle = inputs.find(inp => inp.name.includes('odAngle'));
+        let osAngle = inputs.find(inp => inp.name.includes('osAngle'));
+        let workPrice = document.getElementById('workPrice');
+        console.log('workPrice: ' + (workPrice?'да :':'нет :') + workPrice?.value);
+        if (!workPrice){
+            workPrice =  document.querySelector('#workPrice:disabled');
+        }
+        console.log('workPrice2: ' + (workPrice?'да :':'нет :') + workPrice?.value);
+        if(odAngle && !odAngle.value){
+            alert('Вы забыли указать угол правого цилиндра!');
+            return;
+        }
+        if (osAngle && !osAngle.value){
+            alert('Вы забыли указать угол левого цилиндра!');
+            return;
+        }
+        let distance = inputs.find(inp => inp.id === 'distance');
+        if (!distance && (od || os)){
+            alert("Не введено расстояние!");
+            return;
+        }
+        if (inputs.length >= 6){
+            try {
+                constructor = {
+                    frame: inputs.find(inp => inp.name.includes('id') && inp.id.includes('frame')).value,
+                    odLens: inputs.find(inp => inp.name.includes('id') && inp.id.includes('od')).value,
+                    odAngle: odAngle && odAngle?.value ? odAngle.value : null,
+                    osLens: inputs.find(inp => inp.name.includes('id') && inp.id.includes('os')).value,
+                    osAngle: osAngle && osAngle?.value ? osAngle.value : null,
+                    distance: distance?.value ? distance.value : null,
+                    workPrice: workPrice?.value,
+                    amount: inputs.find(inp => inp.id === 'amount').value,
+                    total: inputs.find(inp => inp.id === 'constructorTotal').value,
+                };
+            } catch (error){
+                alert('Не все поля заполнены!\n Заполните все поля и повторите операцию!');
+                return;
+            }
+            if(constructor) {
+                constructors.push(constructor);
+                storage.setItem('constructors', JSON.stringify(constructors));
+                alert('Конструктор добавлен в корзину!');
+            }
+        }
+    }
+</script>
+
+</body>
+</html>

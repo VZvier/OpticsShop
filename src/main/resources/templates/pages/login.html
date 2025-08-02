@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <th:block th:insert="~{fragments/commons :: head}"></th:block>
+    <meta charset="UTF-8">
+    <title>Aspect/Вход</title>
+    <style>
+        body {
+            background-color: lightgray;
+            align-content: center;
+            justify-items: center;
+        }
+
+        .form-holder {
+            position: relative;
+            top: 35vh;
+            width: 40vw;
+            background-color: white;
+            padding: 10px 20px 10px 20px;
+            box-shadow: 5px 5px 5px;
+            border-radius: 5px;
+        }
+
+        form label {
+            width: 40vw;
+        }
+
+        form input {
+            margin-bottom: 10px;
+            width: 40vw;
+            border-radius: 4px;
+        }
+
+        .form-login {
+            display: grid;
+            width: 30vw;
+        }
+
+        .form-login h3 {
+            margin-block-start: 0.2em;
+            margin-block-end: 0.5em;
+            text-align: center;
+        }
+
+        #enter {
+            width: 20vw;
+            border-radius: 3px;
+            background-color: lightgreen;
+            justify-self: center;
+        }
+
+        #enter:hover {
+            box-shadow: 2px 4px 4px;
+            text-shadow: 2px 2px 2px white;
+        }
+
+        #remember-me {
+            width: 14px;
+        }
+
+        label[for='rememberMe'] {
+            width: 30vw;
+        }
+
+        .welcomeMessage {
+            background-color: wheat;
+            border-radius: 10px;
+            font-size: 14px;
+        }
+
+        .warn {
+            color: white;
+            background-color: #f62727;
+        }
+
+        #menu-btn {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+<th:block th:insert="~{fragments/commons :: nav-bar}"></th:block>
+
+<div class="welcomeMessage" th:if="${welcomeMessage != null}" th:text="${welcomeMessage}"></div>
+<div class="form-holder">
+    <div th:object="${warn}" th:if="${warn != null}" class="warn" th:text="${warn}"></div>
+    <form class="form-login" th:action="@{/shop/api/users/login}" method="POST">
+        <input hidden th:name="positionToReturn" id="positionToReturn">
+        <h3>Вход</h3>
+        <label for="login-field">Логин:</label><input id="login-field" th:name="login">
+        <label for="pass-field">Пароль:</label>
+        <div><input type="password" id="pass-field" th:name="password"><span></span></div>
+        <label for="showHidePass" style="justify-self: right; width: 18vw; cursor: pointer;">Скрыть пароль
+            <input id="showHidePass"
+                   type="checkbox" checked style="width: 20px; justify-self: right; cursor: pointer;"
+                   onchange="document.querySelector('#pass-field').type = document.querySelector('#pass-field').type
+                  === 'password' ? 'text' : 'password';">
+        </label>
+        <label for="remember-me" style="display: inline-block; cursor: pointer;">
+            <input type="checkbox" id="remember-me" name="remember-me"> Запомнить меня!
+        </label>
+        <br><br>
+        <input type="button" onclick="clearReturnAndSubmit()" value="Войти" style="cursor:pointer;" id="submit">
+        <input type="submit" hidden id="enter">
+        <br>
+        <span style="font-size: x-small;">Нет профиля? <a
+                href="/shop/api/users/registration">Создать профиль!</a></span>
+    </form>
+</div>
+
+<script>
+    window.onload = () => {
+        if (storage.getItem('positionToReturn')) {
+            document.querySelector('#positionToReturn').value = storage.getItem('positionToReturn');
+        }
+        document.querySelector('#menu-btn').addEventListener('click', () => activateMenuListener('spare-insertable', true));
+    }
+
+    function clearReturnAndSubmit() {
+        storage.removeItem('positionToReturn');
+        document.querySelector('#enter').click();
+    }
+</script>
+
+<th:block th:insert="~{fragments/commons :: home-btn-and-service-script}"></th:block>
+</body>
+</html>

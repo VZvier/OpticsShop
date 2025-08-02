@@ -1,0 +1,1894 @@
+<th:block th:fragment="head">
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" type="text/css" href="/style.css">
+    <link rel="icon" type="image/png" sizes="22x16" href="/favicon.png">
+    <script data-th-inline="javascript">
+        const userAuth = [[ ${#authentication.authorities} ]];
+    </script>
+</th:block>
+
+<th:block th:fragment="side-bar">
+    <div class="side-bar" id="sideMenu" style="display: none;">
+        <ul class="menu-list">
+            <br>
+            <hr>
+            <li onclick="flipFlop('filter-list'); resetFields('filter-list');"
+                        style="font-size: 16px; color: blue; cursor:pointer;">
+                <u>Фильтр товаров</u>
+            </li>
+            <br>
+            <li id="filter-list">
+                <hr>
+                <ul>
+                    <li>
+                        <label for="nomination">Что искачть:</label>
+                        <select id="nomination">
+                            <option selected value="none">-Категория-</option>
+                            <option value="ready-glasses">Очки</option>
+                            <option value="frame">Оправы</option>
+                            <option value="lens">Линзы</option>
+                            <option value="medical-equipment">Мед. Оборудование</option>
+                            <option value="liquid">Жидкости</option>
+                            <option value="other">Другое</option>
+                        </select>
+                    </li>
+                    <li>
+                        <label for="brand">Производитель:</label>
+                        <select id="brand">
+                            <option selected value="none">-Не выбрано-</option>
+                        </select>
+                    </li>
+                    <li>
+                        <label for="frameType">Тип оправы:</label>
+                        <select id="frameType">
+                            <option selected value="none">-Не выбрано-</option>
+                            <optgroup label="Простые">
+                                <option value="plastic">Пластик</option>
+                                <option value="metal">Металл</option>
+                            </optgroup>
+                            <optgroup label="Полуоправные">
+                                <option value="plastic semi-rimless">Пластик</option>
+                                <option value="metal semi-rimless">Металл</option>
+                            </optgroup>
+                            <optgroup label="Безоправные">
+                                <option value="rimless">Безоправные</option>
+                            </optgroup>
+                        </select>
+                    </li>
+                    <li>
+                        <label for="model">Модель:</label><br/>
+                        <select id="model">
+                            <option selected value="none">-Не выбрано-</option>
+                        </select>
+                    </li>
+                    <li>
+                        <label for="frameSize">Размер:</label><br>
+                        <select id="frameSize">
+                            <option selected value="none">-Не выбрано-</option>
+                            <option value="adult">Взрослые</option>
+                            <option value="childish">Детские</option>
+                        </select>
+                    </li>
+                    <li>
+                        <label for="gender">По полу:</label>
+                        <select id="gender">
+                            <option selected value="none">-Не выбрано-</option>
+                            <option value="man">Мужские</option>
+                            <option value="woman">Женские</option>
+                            <option value="unisex">Унисекс</option>
+                        </select>
+                    </li>
+                    <li>
+                        <label for="lensType">Тип линз:</label>
+                        <select id="lensType">
+                            <option selected value="none">-Не выбрано-</option>
+                            <option value="stigmatic">Стигматическая</option>
+                            <option value="astigmatic">Астигматическая</option>
+                            <option value="computer">Компьютерная</option>
+                            <option value="blue-block">Комп. Blue-block</option>
+                            <optgroup label="Фотохромные">
+                                <option value="photochrom(gray)">Серая</option>
+                                <option value="photochrom(brown)">Коричневая</option>
+                            </optgroup>
+                            <option value="orange">Анти-фары</option>
+                            <option value="UV-protection">Солнцезащитная</option>
+                            <option value="aspherical">Асферическая</option>
+                        </select>
+                    </li>
+                    <li>
+                        <label for="coefficient">Коэффициент:</label>
+                        <select id="coefficient">
+                            <option selected value="none">-Не выбрано-</option>
+                            <option value="1,49"></option>
+                            <option value="1,54"></option>
+                            <option value="1,62"></option>
+                        </select>
+                    </li>
+                    <li><label for="sp">Диоптрии:</label>
+                        <select id="sp">
+                            <option selected value="none">-Не выбрано-</option>
+                        </select>
+                    </li>
+                    <li>
+                        <label for="cyl">Цилиндр:</label>
+                        <select id="cyl">
+                            <option selected value="none">-не выбрано-</option>
+                        </select>
+                    </li>
+                    <li><label for="distance">Расстояние мм:</label>
+                        <select id="distance">
+                            <option selected value="none">-Не выбрано-</option>
+                        </select>
+                    </li>
+                    <li>
+                        <label>Стоимость &#8372; :</label>
+                        <div id="priceLimits"><label for="lower-price">Мин:</label>
+                            <input autocomplete="off" class="price-limit" id="lower-price"
+                                   placeholder="От"> - <label for="upper-price">Макс:</label>
+                            <input autocomplete="off" class="price-limit" id="upper-price"
+                                   placeholder="До">
+                        </div>
+                    </li>
+                    <li>
+                        <label for="volume">Объем:</label>
+                        <select id="volume">
+                            <option selected value="none">-Не выбрано-</option>
+                        </select>
+                    </li>
+
+                    <li>
+                        <label>Показать в наличии/Все:
+                            <input style="display: none;" type="checkbox" id="available" checked="false">
+                            <div class="slider" onclick="changeSliderValue(this, event)" id="0">
+                                <span class="thumb"></span>
+                            </div>
+                        </label>
+                    </li>
+                    <br>
+                </ul>
+            </li>
+            <hr>
+
+            <li onclick="flipFlop('constructor')"
+                style="font-size: 16px; color: blue; cursor:pointer;">
+                <u>Очки под заказ</u>
+            </li>
+            <br>
+            <li id="constructor" style="display:none;">
+                <ol>
+                    <li style="list-style-type: none; color: blue; cursor:pointer;"><u onclick="window.location='/shop/api/constructor'">Открыть конструктор</u></li>
+                </ol>
+            </li>
+            <hr>
+
+            <li onclick="flipFlop('filter-by-id')" style="color: blue; cursor: pointer; font-size: 16px;"><u>Товар по коду</u></li>
+            <li id="filter-by-id" class="product-by-id" style="display: none;">
+                <label for="product-id">Код товара:</label><br>
+                <input placeholder="Код товара" id="product-id" style="width: 110px;" oninput="getProductSuggestions(this)"
+                        onchange="selectProductById(this)" list="product-list-by-id" autocomplete="off"/>
+                <datalist id="product-list-by-id"></datalist>
+                <button type="button" id="prod-details" disabled style="width: 70px; border-radius: 4px; background: lightskyblue; color: white;" onclick="window.location='/shop/products/details/' + document.querySelector('#product-id').value">Перейти</button>
+            </li>
+
+            <br th:unless="${#authorization.expression('hasAnyRole({''Role_STAFF'', ''ROLE_SYSADMIN'', ''ROLE_ANONIMOUS''})')}">
+            <hr th:unless="${#authorization.expression('hasAnyRole({''Role_STAFF'', ''ROLE_SYSADMIN'', ''ROLE_ANONIMOUS''})')}">
+
+            <li th:if="${#authorization.expression('hasRole(''ROLE_USER'')')
+                    && !#authorization.expression('hasAnyRole({''ROLE_ANONYMOUS'', ''ROLE_STAFF'', ''ROLE_SYSADMIN''})')}"
+                    onclick="window.location='/shop/orders/my-orders'">
+                <u style="cursor: pointer; color: blue;">Мои Заказы</u>
+            </li>
+
+            <br th:if="${#authorization.expression('hasRole(''ROLE_USER'')')}">
+            <hr th:if="${#authorization.expression('hasRole(''ROLE_USER'')')}">
+
+            <li onclick="flipFlop('administrating')"
+                    th:if="${#authorization.expression('hasAnyRole({''Role_SYSADMIN'', ''ROLE_STAFF''})')}"
+                    style="color: blue; cursor:pointer; font-size: 16px;">
+                <u>Администирование</u>
+            </li>
+
+            <li id="administrating"  style="display: none;"
+                    th:if="${#authorization.expression('hasAnyRole({''Role_SYSADMIN'', ''ROLE_STAFF''})')}">
+                <th:block th:insert="~{fragments/commons :: administrating}"></th:block>
+            </li>
+            <br th:if="${#authorization.expression('hasAnyRole({''Role_SYSADMIN'', ''ROLE_STAFF''})')}">
+            <hr th:if="${#authorization.expression('hasAnyRole({''Role_SYSADMIN'', ''ROLE_STAFF''})')}">
+
+            <li th:unless="${#authorization.expression('hasRole(''ROLE_ANONYMOUS'')')}" id="user-image">
+                <div id="user-sub-menu">
+                    <ol style="list-style-type: none">
+                        <li onclick="getUserPageLocation()">Кабинет</li>
+                        <hr>
+                        <li onclick="window.location='/shop/api/users/address/page'">Сменить адресс</li>
+                        <hr>
+                        <li onclick="window.location.href='/logout'">&#128274;| Выход</li>
+                    </ol>
+                </div>
+            </li>
+        </ul>
+    </div>
+
+
+    <script name="side-bar-script">
+        async function getUserPageLocation(){
+            let authUserId;
+            let response = await fetch('/shop/data/user-id');
+            if (response.ok){
+                response.json().then(data => authUserId = data);
+                console.log("Id: " + authUserId);
+                setTimeout(() => {
+                    return window.location='/shop/api/users/page/' + authUserId;
+                }, 500);
+            }
+        }
+
+        function changeSliderValue(target, e){
+            let checkboxAvailable = document.querySelector('#available');
+            if (target.id === '0'){
+                target.id = '1';
+            } else {
+                target.id = '0';
+            }
+            checkboxAvailable.checked = target.id === '1';
+            target.classList.toggle('slider-checked');
+            Array.from(target.children).find(e => e.nodeName === "SPAN").classList.toggle('thumb-checked');
+        }
+
+        function flipFlop(id){
+            console.log("Id: " + id);
+            let idArray = ['filter-list', 'filter-by-id', 'administrating', 'constructor'];
+            let idSubArray = ['orderSearch', 'userSearch', 'productSearch', 'changePrice', 'changeWorkPrice'];
+            for (let str of idArray.includes(id) ? idArray : idSubArray){
+                let elem = document.querySelector(`#${str}`);
+                if (!elem) continue;
+                if (str !== id){
+                    elem.style.display = 'none';
+                } else {
+                    elem.style.display = elem.style.display === 'none'? 'block':'none';
+                }
+            }
+        }
+
+        function getProductSuggestions(target){
+            const dataList = el('#product-list-by-id');
+            dataList.innerHTML = '';
+            let filtered = allProducts.filter(p => (p.id).includes(target.value));
+            if (!filtered.length || filtered.length === 0) {
+                filtered = allProducts.filter(p => p.id.toLowerCase().includes((target.value).toLowerCase()));
+            }
+            if (filtered?.length > 0){
+                for (let i = 0; i < filtered.length && i < 10; i++){
+                     const p = filtered[i];
+                    dataList.appendChild(create('option', {
+                        value: p.id.trim(),
+                        text: ('Товар: ' + ", " + (enumsRu[p.nomination.trim()] ? enumsRu[p.nomination.trim()] : p.nomination.trim())
+                            + (p?.brand ? ', ' + p.brand : '') + (p?.model ? ", " + p.model:"") + (p?.sp ? ", " +  p.sp.trim():'')
+                            + (p?.cyl? ", " + p.cyl: '') + (p?.distance? ", " + p.distance:'')) + (p?.volume ? ','  + p.volume : '')
+                    }));
+                }
+            }
+        }
+
+        function resetFields(id){
+            if(el(id).style.display === 'none') {
+                let allSelectInputs = Array.from(el(id).querySelectorAll('select, input'));
+                allSelectInputs.forEach(e => {
+                    if (e.tagName === 'INPUT'){
+                        e.value = '';
+                    } else {
+                        if (e.value !== 'none'){
+                            Array.from(e.options).find(o => o.value === 'none').selected = true;
+                        }
+                    }
+                })
+            }
+        }
+
+        function selectProductById(input){
+            if(input?.value){
+                console.log("Select product val: " + input.value);
+                let result = allProducts.find(p=> p.id.trim() === input.value);
+                if (result) {
+                    console.log("Select product res: " + result);
+                    document.querySelector('#prod-details').disabled = false;
+                } else {
+                    document.querySelector('#prod-details').disabled = true;
+                    return;
+                }
+            }
+        }
+
+    </script>
+</th:block>
+
+<th:block th:fragment="administrating">
+    <h5 onclick="flipFlop('orderSearch')" style="cursor: pointer; margin-left: 10px; color: mediumslateblue"><u class="wh">Заказ</u></h5>
+    <ol id="orderSearch" style="display:none;">
+        <label for="orderSearchInput">Критерий поиска заказа:<br>(как id/дата)</label>
+        <input id="idOfFoundOrder" style="display: none;">
+        <input class="adm-search-field" id="orderSearchInput" oninput="showSearchSuggestions(this)"
+               list="orderListSuggestions" autocomplete="off" onchange="insertId(this)">
+        <datalist id="orderListSuggestions"></datalist>
+        <li class="sub-link" onclick="window.location=`/shop/orders/page/${getOrderCriteria()}`"><u>Показать заказ</u></li>
+
+        <li class="sub-link" onclick="window.location='/shop/orders/customer/' + getOrderCriteria()"><u>Показать заказчика</u></li>
+
+        <li class="sub-link" onclick="window.location='/shop/orders/by_date_of_creation/' + getDateNow()"><u>Показать заказы за сегодня</u></li>
+        <li class="sub-link" onclick="window.location='/shop/orders/by_date_of_creation/' + getDate(this)"><u>Показать заказы за дату</u></li>
+        <li class="sub-link" onclick="window.location='/shop/orders/per/month'"><u>Заказы за текущий месяц</u></li>
+        <li class="sub-link" onclick="window.location='/shop/orders/per/year'"><u>Заказы за текущий год</u></li>
+        <li class="sub-link" onclick="document.querySelector('#orderSearchInput')?.value ? window.location='/shop/orders/renew/'
+                + document.querySelector('#orderSearchInput').value : '';"><u>Изменить заказ</u></li>
+        <li class="sub-link" onclick="window.location='/shop/orders/new'"><u>Создать заказ</u></li>
+    </ol>
+    <br>
+    <hr>
+    <h5 onclick="flipFlop('userSearch')" style="cursor: pointer; margin-left: 10px; color: mediumslateblue;"><u class="wh">Пользователь</u></h5>
+    <ol id="userSearch" style="display: none;">
+        <label for="userSearchInput">Критерий поиска пользователя: </label>
+        <input id="idOfFoundUser" style="display: none;">
+        <input class="adm-search-field" id="userSearchInput" oninput="showSearchSuggestions(this)"
+               onchange="rememberId(this)" list="userListSuggestions" autocomplete="off">
+        <datalist id="userListSuggestions"></datalist>
+        <li class="sub-link" onclick="window.location='/shop/api/users/page/' + el('idOfFoundUser').value"><u>Показать пользователя</u></li>
+        <li class="sub-link" onclick="window.location='/shop/orders/by-user-id/' + el('idOfFoundUser').value"><u>Показать заказы пользователя</u></li>
+        <li class="sub-link" onclick="window.location='/shop/api/users/page/' + el('idOfFoundUser').value"><u>Редактировать пользователя</u></li>
+        <li class="sub-link" onclick="window.location='/shop/api/new-users/page'"><u>Создать пользователя</u></li>
+        <li class="sub-link" id="rmUser" onclick="removeEntity(this, el('idOfFoundUser').value )">
+            <u>Удалить пользователя</u>
+        </li>
+        <li class="sub-link" id="rmCustomer" onclick="removeEntity(this, el('idOfFoundUser').value)">
+            <u>Удалить покупателя</u>
+        </li>
+        <li class="sub-link" id="getAllCustomers" onclick="window.location='/shop/api/users/customers/all'">
+            <u>Список пользователей</u>
+        </li>
+    </ol>
+    <br>
+    <hr>
+    <h5 onclick="flipFlop('productSearch')" style="cursor: pointer; margin-left: 10px; color: mediumslateblue"><u class="wh">Продукт</u></h5>
+    <ol id="productSearch" style="display: none;">
+        <label for="productSearchInput">Критерий поиска продукта: </label>
+        <input id="idOfFoundProduct" style="display: none;">
+        <input class="adm-search-field" id="productSearchInput" oninput="makeGoodsDataSuggestions(this.value, '#productListSuggestions')"
+                     onfocusout="resetFocus(event)" onchange="insertId(this)" list="productListSuggestions" autocomplete="off">
+        <div id="productListSuggestions" style="display:none;"></div>
+        <li class="sub-link" onclick="window.location='/shop/products/details/' + document.querySelector('#idOfFoundProduct').value"><u>Найти продукт</u></li>
+        <li class="sub-link" onclick="window.location='/shop/products/renew/' + document.querySelector('#idOfFoundProduct').value">
+            <u>Редактировать продукт</u>
+        </li>
+        <li class="sub-link" onclick="window.location='/shop/products/new'"><u>Создать продукт</u></li>
+        <br>
+        <button type="button" id="clearAll" onclick="clearProductsDb()"><u>Очистить товары</u></button>
+    </ol>
+    <br><hr>
+    <h5 onclick="flipFlop('changePrice')" style="cursor: pointer; margin-left: 10px; color: mediumslateblue"><u class="wh">Изменить цену</u></h5>
+    <ol id="changePrice" style="display:none;">
+        <label for="criteria">Критерий отбора<br>(как брэнд/модель):</label>
+        <input type="text" id="criteria" oninput="makeGoodsDataSuggestions(this.value, '#criteriaSuggestions')"
+                    list="criteriaSuggestions" autocomplete="off">
+        <datalist id="criteriaSuggestions"></datalist>
+        <br>
+        <label for="percent">Измененить на<br>( % или грн.):</label><input type="number" id="percent">
+        <br><br>
+        <li><u class="sub-link" onclick="increaseDecreaseGoodsPrice('increase', 'percent')">Увеличить на процент</u></li>
+        <li><u class="sub-link" onclick="increaseDecreaseGoodsPrice('decrease', 'percent')">Уменьшить на процент</u></li>
+        <hr>
+        <li><u class="sub-link" onclick="increaseDecreaseGoodsPrice('increase', 'value')">Увеличить на грн.</u></li>
+        <li><u class="sub-link" onclick="increaseDecreaseGoodsPrice('decrease', 'value')">Уменьшить на грн.</u></li>
+        <br>
+        <hr>
+    </ol>
+    <br>
+    <hr>
+    <h5 onclick="flipFlop('changeWorkPrice'); showWorkPrice()" style="cursor: pointer; margin-left: 10px; color: mediumslateblue"><u class="wh">Изтменить цену работы</u></h5>
+    <ol id="changeWorkPrice" style="display:none;">
+        <label for="workPrice">Цена работы:<br>(грн.):</label>
+        <input type="text" id="workPrice" autocomplete="off">
+        <br>
+        <hr>
+        <li><u class="sub-link" onclick="setNewWorkPrice()">Подтвердить</u></li>
+        <br>
+        <hr>
+    </ol>
+
+    <script name="administation-sidebar-script">
+
+        async function showWorkPrice(){
+            let promise = await fetch('/shop/data/work-price');
+            if (promise.ok){
+                await promise.json().then(data => data.forEach(o =>{
+                    console.log("From JSON: " + JSON.stringify(o));
+                    el('workPrice').value = o;
+                }));
+            } else {
+                console.warn('Attempt get work price failed!')
+            }
+        }
+
+        async function setNewWorkPrice(){
+            let price = el('workPrice');
+            let promise = await fetch('/shop/data/work-price/new/' + price.value);
+            if (promise.ok){
+                await promise.json().then(data => price.value = data);
+                alert("Цена: \'" + price.value + '\' успешно установленна!');
+            } else {
+                console.error('Попытка установить цену: ' + price.value +' неудачна!');
+                alert('Попытка установить цену: ' + price.value +' неудачна!');
+            }
+        }
+
+        function getOrderCriteria(){
+            let foundId = el('idOfFoundOrder');
+            let searchCriteria = el('orderSearchInput');
+            console.log('Id of Found order: ' + foundId?.value + 'search criteria: ' + searchCriteria?.value + ' Are same: ' + (foundId.value === searchCriteria.value));
+            let val = foundId.value ? foundId.value : searchCriteria.value ? searchCriteria.value : '';
+            console.log("Value: " + val);
+            return val;
+        }
+
+        function resetFocus(event){
+            setTimeout( () => {
+                document.querySelector('#productListSuggestions').style.display = 'none';
+            }, 100);
+        }
+
+        function insertId(target){
+            let id;
+            switch (target.id){
+                case('orderSearchInput') : {
+                    id = 'idOfFoundOrder';
+                    break;
+                }
+                case('userSearchInput') : {
+                    id = 'idOfFoundUser';
+                    break;
+                }
+                case('productSearchInput') : {
+                    id = 'idOfFoundProduct';
+                    break;
+                }
+                default : {
+                    return;
+                }
+            }
+            document.querySelector('#' + id).value = target.value;
+        }
+
+        async function increaseDecreaseGoodsPrice(action, by){
+            let percent = document.querySelector('#percent');
+            let criteria = document.querySelector('#criteria');
+            if (!criteria.value || !percent.value) {
+                alert('Сначала заполните поля!');
+                return;
+            }
+            if (percent.value && criteria.value) {
+                let form = new FormData;
+                form.append('action', action);
+                form.append('percent', percent.value);
+                form.append('criteria', criteria.value);
+                let response;
+                try {
+                    response = await fetch(`/shop/products/price/renew/` + by, {
+                        method: 'PUT',
+                        headers: {'contentType': 'application/json'},
+                        body: form
+                    }).catch(error => {
+                        console.error('Error cannot update prices! \n' + error.method + ', Cause: ' + error.stackTrace);
+                    });
+                    if (response.ok) {
+                        alert(`Цена группы товаров ${criteria.value} ${action === 'increase' ? 'увеличена' : 'уменьшена'}
+                        на ${percent.value} ${by === 'percent' ? 'процентов' : 'грн.'} успешно!`);
+                        window.location.reload();
+                    }
+                } catch (error) {
+                    console.error('Error ' + response.status + '. ' + error.message + ' \n' + error.stackTrace);
+                }
+            } else {
+                alert('Не все значения указаны!');
+            }
+        }
+
+        async function clearProductsDb() {
+            await fetch("/shop/products/rm-all", {"method": "DELETE"});
+            document.querySelector('.home-btn').click();
+        }
+
+        async function rememberId(e){
+            console.log('Remember id! Target id: "' + e.id + '", target value: "' + e.value + '"!');
+            if (e && e.value) {
+                let inpId = e.previousElementSibling;
+                console.log('Input id: ' + inpId.id);
+                let url = '/shop/';
+                switch (e.id) {
+                    case ('orderSearchInput'): {
+                        url += 'orders/search/';
+                        break
+                    }
+                    case ('userSearchInput'): {
+                        url += 'api/users/search/';
+                        break
+                    }
+                    case ('productSearchInput'): {
+                        url += 'products/search/';
+                        break
+                    }
+                }
+                url += e.value;
+                console.log("Generated URL: " + url);
+                let response = await fetch(url);
+                if (response.ok) {
+                    try {
+                        await response.json().then(entities => {
+                            console.log('Entities: ' + JSON.stringify(entities));
+                            inpId.value = entities[0].id.trim();
+                            console.log('Input value: ', inpId.value);
+                        });
+                    } catch (error) {
+                        console.error("Criteria '" + e.value + "' not found!");
+                    }
+                }
+            }
+        }
+
+        async function showSearchSuggestions(target){
+            if (target.value && target.value.length > 2) {
+                let url = '/shop/data/';
+                switch (target.id){
+                    case ('userSearchInput') : {
+                        url += 'customers/';
+                        break;
+                    }
+                    case ('orderSearchInput') : {
+                        url += 'orders/';
+                        break;
+                    }
+                    case ('productSearchInput') : {
+                        makeGoodsDataSuggestions(target.value, '#productListSuggestions');
+                        return;
+                    }
+                }
+                url += 'search/';
+                let promise;
+                console.log('Url includes "customers" - ' + url.includes('customers') + ', target match "\W" - ' + target.value.match(/\W+/ig));
+                if (url.includes('customers') && target.value.match(/\W+/ig)){
+                    url += 'full-name';
+                    let form = new FormData;
+                    form.append("name", target.value);
+                    console.log('URL: ' + url);
+                    promise = await fetch(url, {
+                        method: 'POST',
+                        headers: {'contentType': 'application/json'},
+                        body: form
+                    });
+                } else {
+                    console.log('URL: ' + url);
+                    url += target.value
+                    promise = await fetch(url);
+                }
+                let dataList = document.querySelector(`#${target.list.id}`);
+                dataList.innerHTML = '';
+
+                if (promise.ok) {
+                    await promise.json().then(data => data.forEach(str => {
+                        console.log('Str: ' + str);
+                        dataList.appendChild(create('option', {
+                            value: str.trim(),
+                            textContent: str.trim()
+                        }));
+                    }));
+                } else {
+                    console.warn('ShowSearchSuggestions method ')
+                }
+            }
+        }
+
+        function makeGoodsDataSuggestions(param, elemId){
+            let suggested = allProducts.filter(p => includesParamIgnoreCase(p, param)).slice(0, 6);
+            console.log('Suggested : ' + suggested.length);
+            document.querySelector(elemId).innerHTML = '';
+            if (elemId === '#productListSuggestions') {
+                document.querySelector(elemId).style.display = suggested.length === 0 ? 'none' : 'block';
+            }
+            suggested.forEach(p => {
+                let val = includesParamIgnoreCase(p, param);
+                if (val) {
+                    val = val.trim();
+                    let text = enumsRu[p.nomination.trim()] + ': \n' + p.brand.trim()
+                        + (p.model ? ', ' + p.model.trim() : '') + (p.volume ? ', Обьем: ' + p.volume + ' мл.' : '')
+                        + (p?.coefficient ? ', Коэфициент: ' + p.coefficient : '')
+                        + (p?.sp? ', Сфера ' + p.sp + ' ' : '') + (p?.cyl ? ', Цилиндр ' + p.cyl: '') + ';';
+                    if (elemId === '#productListSuggestions') {
+                        document.querySelector(elemId).appendChild(create('div', {
+                            id: 'prod-' + p.id.trim(),
+                            name: val,
+                            innerText: text,
+                            className: 'prod-suggestions',
+                            onclick: () => setValues(event),
+                        }));
+                    } else {
+                        document.querySelector(elemId).appendChild(create('option', {
+                            value: val,
+                            text: text
+                        }));
+                    }
+                }
+            });
+        }
+
+        function setValues(event){
+            const target = event.target;
+                console.log('Target name: ' + target.name + ' Target id substr:' + target.id.substring(5) + ' target node name: ' + target.nodeName);
+                document.querySelector('#productSearchInput').value = target.name;
+                document.querySelector('#idOfFoundProduct').value = target.id.substring(5);
+                target.parentElement.style.display = 'none';
+        }
+
+        function includesParamIgnoreCase(obj, param){
+            let paramInLowerCase = param.toLocaleLowerCase();
+            const keyOfRu = Object.keys(enumsRu).find(k => enumsRu[k].toLocaleLowerCase().includes(paramInLowerCase));
+            const objKey = Object.keys(obj).find(k => (typeof obj[k] === 'string' && k !== 'description' && obj[k].trim() === keyOfRu));
+            if (keyOfRu && objKey){
+                return obj[objKey].trim();
+            } else {
+                let key = Object.keys(obj).find(k => obj[k] && typeof obj[k] === 'string' && k !== 'description'
+                                && obj[k].trim().toLowerCase().includes(paramInLowerCase));
+                return key ? obj[key].trim() : null;
+            }
+        }
+
+        function getDate(target){
+            let input = Array.from(target.parentElement.children).find(e => e.tagName === 'INPUT' && e.style.display !== 'none');
+            if (input.value && input.value.match(/\d+\.\d+\.\d+/)){
+                console.log("Input.value.match!")
+                return window.location='/shop/orders/by_date_of_creation/' +
+                    input.value;
+            } else {
+                return;
+            }
+        }
+    </script>
+</th:block>
+
+<th:block th:fragment="nav-bar">
+    <div class="nav-bar">
+        <div class="search-btn" id="menu-btn">☰ ПОИСК</div>
+
+        <span class="header"><strong class="home-linc" onclick="window.location='/'">Aspect Оптика</strong></span>
+
+        <div th:if="${#authorization.expression('hasAnyRole({''ROLE_STAFF'', ''ROLE_SYSADMIN''})')}" class="unchecked"
+                    onclick="window.location='/shop/orders/unchecked'">
+            &#x1F4E9;<span class="unchecked-amount" style="display: none;"></span>
+        </div>
+
+        <button class="basket" onclick="openOrderCreationPage()">
+            <span id="orderLines"></span>&#128722;
+        </button>
+
+        <div th:if="${#authorization.expression('hasRole(''ROLE_ANONYMOUS'')')}" class="login-btn-gr">
+            <input type="button" id="btn-sign-in" onclick="location.href='/shop/api/users/login';" value="Войти"/>
+            <input type="button" id="btn-sign-up" onclick="location.href='/shop/api/users/registration';"
+                   value="Регистрация"/>
+        </div>
+
+        <div th:unless="${#authorization.expression('hasRole(''ROLE_ANONYMOUS'')')}" class="login-btn-gr">
+            <input type="button" id="logout" onclick="location.href='/logout'" value="Выйти">
+        </div>
+    </div>
+</th:block>
+
+
+<th:block th:fragment="home-btn-and-service-script">
+    <script name="home-btn-and-service-scripts">
+
+        let storage = localStorage;
+        let allProducts = ![null, undefined, 'null', 'undefined'].includes(storage.getItem('allProducts'))
+                ? JSON.parse(storage.getItem('allProducts')) : null;
+        let workPrice;
+        let orderLines = [];
+        let constructors = [];
+
+        let fieldNamesRu = {
+            'id': 'Код',
+            'nomination': 'Категория',
+            'brand': 'Брэнд',
+            'model': 'Модель',
+            'frameType': 'Тип оправы',
+            'frameSize': 'Размер',
+            'gender': 'Пол',
+            'lensType': 'Тип линз',
+            'country':'Страна',
+            'coefficient':'Коэффициент',
+            'sp': 'Диоптрии',
+            'cyl': 'Целиндр',
+            'distance': 'Расстояние',
+            'price': 'Цена',
+            'volume': 'Объём',
+            'description': 'Описание',
+            'available': 'Наличие',
+            'deliveryService': 'Служба доставки',
+            'deliveryType': 'Тип доставки',
+            'region': 'Область',
+            'city': 'Город',
+            'settlement': 'Нас. пункт',
+            'street': 'Улица',
+            'apartment': 'Дом',
+            'deliveryDepartment': 'Отделение',
+            'parcelTerminal': 'Почтомат',
+        };
+        let enumsRu = {
+            'ready-glasses': 'Очки',
+            'frame': 'Оправа',
+            'lens': 'Линза',
+            'liquid': 'Жидкость',
+            'medical equipment': 'Мед. оборудование',
+            'plastic': 'Пластиковая',
+            'metal': 'Металическая',
+            'plastic semi-rimless': 'Полуоправная пластик',
+            'metal semi-rimless': 'Полуоправная металл',
+            'rimless': 'Безоправная',
+            'childish': 'Детская',
+            'adult': 'Взрослая',
+            'man': 'Мужская',
+            'woman': 'Женская',
+            'universal': 'Унисекс',
+            'stigmatic': 'Стигматическая',
+            'astigmatic': 'Астигматическая',
+            'computer': 'Компьютерная',
+            'blue-block': 'Компьютерная(Blue-block)',
+            'photochrom(brown)': 'Фотохромная (коричневая)',
+            'photochrom(gray)': 'Фотохромная(серая)',
+            'aspherical': 'Асферическая',
+            'orange': 'Водительская',
+            'UV-protection': 'Солнце-защитная',
+            'ACCEPTED': 'Принят',
+            'PROCESSING': 'Обрабатываеться',
+            'CONFIRMED': 'Подтвержден',
+            'SENT': 'Отправлен',
+            'DELIVERED': 'Доставлен',
+            'CANCELED': 'Отменён',
+            true: 'Да',
+            false: 'Нет'
+        };
+
+        function loadMainFunctions(){
+            if (window !== top){
+                window = top;
+            }
+            showOLCount();
+            showUnchecked();
+            shortcutListener(event);
+        }
+
+        function shortcutListener(e){
+            document.addEventListener('keydown', (event) => {
+                if (event.ctrlKey && event.keyCode === 70){
+                    event.preventDefault();
+                    window.location.href='/shop/api/users/login';
+                }
+            });
+        }
+
+        function activateMenuListener(insertableId, isForSale){
+            el('sideMenu').style.display = el('sideMenu').style.display === 'none' ? 'block' : 'none';
+            el('mainField').style.left = el('sideMenu').style.display === 'none' ? '0' : '230px';
+            if (el('#spare-insertable')){
+                createGoods(allProducts, insertableId, isForSale);
+                elemsAsArray('.goods-baw').forEach(e => e.style.display = 'none');
+                el('#spare-insertable').style.display = el('sideMenu').style.display === 'none' ? 'none' : 'block';
+                el('insertable').style.display = el('spare-insertable').style.display === 'none' ? 'block' : 'none';
+            }
+            showHideProductSearchFields();
+            replaceOptions('nomination');
+            let elementsIdArray = ['nomination', 'frameType', 'brand', 'model', 'frameSize', 'gender', 'volume',
+                'lensType', 'coefficient', 'distance', 'sp', 'cyl', 'lower-price', 'upper-price', 'available'];
+            for (let id of elementsIdArray) {
+                if (!['frameType', 'frameSize', 'gender', 'lensType', 'available'].includes(id)) {
+                    replaceOptions(id);
+                }
+                el(id).addEventListener('change', ()=> filterSearch(event, insertableId, isForSale));
+            }
+        }
+
+        async function getUncheckedAmount(){
+            document.querySelector('.unchecked').style.display =
+                    ( userAuth.includes({authirity: 'ROLE_ANONYMOUS'}) || (userAuth.includes({authority: 'ROLE_USER'})
+                    && !userAuth.includes({authority: 'ROLE_SYSADMIN'})) ) ? 'none' : 'block';
+
+            let uncheckedAmountSpan = document.querySelector('.unchecked-amount');
+            let response = await fetch('/shop/data/orders/unchecked-count');
+            if (response.ok){
+                await response.json().then(amount => {
+                        uncheckedAmountSpan.innerText = amount;
+                        uncheckedAmountSpan.style.display = amount > 0 ? 'block' : 'none';
+                });
+            } else {
+                uncheckedAmountSpan.style.display = 'none';
+            }
+        }
+
+        function showUnchecked(){
+            if(document.querySelector('.unchecked')){
+                getUncheckedAmount();
+                setInterval(getUncheckedAmount, 30000);
+            }
+        }
+
+        function create(name, params){
+            const elem = document.createElement(name);
+            return !params ? elem
+                : Object.assign(elem, params);
+        }
+
+        function showHideProductSearchFields(value) {
+            let allSideBarFields = ['model', 'frameType', 'frameSize', 'gender',
+                'lensType', 'distance', 'coefficient', 'sp', 'cyl', 'volume'];
+            for (let id of allSideBarFields) {
+                let elem = el(id);
+                elem.hidden = true;
+                getLabel(id).hidden = true;
+            }
+            let sideBarFields;
+            switch (value){
+                case 'frame' : sideBarFields = ['model', 'frameType', 'frameSize', 'gender']; break;
+                case 'ready-glasses' :
+                    sideBarFields = ['model', 'frameType', 'frameSize', 'gender', 'lensType', 'sp', 'distance'];
+                    break;
+                case 'lens' : sideBarFields = ['lensType', 'coefficient', 'sp', 'cyl']; break;
+                case 'liquid' : sideBarFields = ['volume']; break;
+                case 'medical-equipment' : sideBarFields = ['model']; break;
+                default : sideBarFields = []; break;
+            }
+            for (let sideBarField of sideBarFields) {
+                getLabel(sideBarField).hidden = false;
+                el(sideBarField).hidden = false;
+                el(sideBarField).value = '';
+            }
+            for (let field of allSideBarFields){
+                if (el(field).hidden && el(field).options){
+                    const options = Array.from(el(field).options);
+                    options.find(opt => opt.value === 'none').selected = true;
+                }
+            }
+        }
+
+        function putCommaToNumber(val, isMoney) {
+            val = val.toString();
+            if (val.toString()) {
+                if ([0, '0'].includes(val)) return val;
+                let sign = val.charAt(0) === '-' ? '-' : '+';
+                val = !val.charAt(0).match(/\d/) ? val.substring(1, val.length) : val;
+                let separator = val.includes('.') ? '.' : val.includes(',') ? ',' : null;
+                let before = '';
+                let after = '';
+                if (separator !== null) {
+                    [before, after] = val.split(separator);
+                } else if (isMoney) {
+                    return val + ',00';
+                } else {
+                    before = val;
+                    after = '.00';
+                }
+                return sign + before + (separator ? ',' : '') + after;
+            } else {
+                return '';
+            }
+        }
+
+        function extractIntValue(value) {
+            if (value && value.match(/\D+/ig)) {
+                return +(value.replace(/\D+/, ''));
+            }
+            return +value;
+        }
+
+        function getLabel(id) {
+            if (id && document.querySelector(`label[for=${id}]`)) {
+                return document.querySelector(`label[for=${id}]`);
+            } else {
+                console.log(`Warning: No label for such id - ${id}`);
+            }
+        }
+
+        function el(id) {
+            try {
+                if (id && typeof id === 'string') {
+                    if (id.startsWith('.') || id.startsWith('#')) {
+                        return  document.querySelector(id);
+                    } else {
+                        return  document.querySelector('#' + id);
+                    }
+                }
+            } catch (e) {
+                console.log(`Warning: Element '${id}' doesn't exist! ` + e);
+            }
+        }
+
+        function filterSearch(event, id, isForSale) {
+            if (event && event.target.id === 'nomination') showHideProductSearchFields(event.target.value);
+            let elements = Array.from(document.querySelectorAll('#filter-list input, #filter-list select'));
+            let filteredProducts = allProducts;
+            for (let elem of elements) {
+                createOptionsAfterFilter(elem, event.target, filteredProducts);
+                if(elem.id !== 'available') {
+                    if ((elem?.value || elem.value === 0) && !elem.hidden && elem.value !== 'none') {
+                        if (!elem.id.includes('price')) {
+                            filteredProducts = filteredProducts
+                                .filter(p => (typeof p[elem.id] === 'string' ? p[elem.id].trim() : p[elem.id])
+                                    === (typeof p[elem.id] === 'number' ? +elem.value : elem.value));
+                        } else {
+                            if (!elem.value.match(/\D/)) {
+                                filteredProducts = elem.id.includes('lower') ?
+                                    filteredProducts.filter(p => +(p['price'].replace(/\D+/, '').toString()) / 100 >= +elem.value) :
+                                    filteredProducts.filter(p => +(p['price'].replace(/\D+/, '').toString()) / 100 <= +elem.value);
+                            } else {
+                                let eVal = elem.value.match(/[,\\.]/)
+                                    ? elem.value.replace(/\D+/, '').toString() / 100 : +elem.value;
+                                let isLower = elem.id.includes('lower')
+                                filteredProducts = filteredProducts.filter(p => {
+                                    let productPrice = +(p.price.replace(/\D+/, '').toString());
+                                    return isLower ? productPrice < eVal : productPrice >= eVal;
+                                });
+                            }
+                        }
+                    }
+                } else {
+                    if(elem.checked) {
+                        filteredProducts = filteredProducts.filter(p => p.available === elem.checked);
+                    }
+                }
+            }
+            createGoods(filteredProducts, id, isForSale);
+        }
+
+        function createOptionsAfterFilter(e, target, filteredProducts){
+            const emptyOpt = create('option', {value: 'none', text: '-Не Выбрано'});
+            let uniques = []
+            const elemVal = e.value;
+            let newOptions = [];
+            let selectPresence = false;
+            filteredProducts.forEach(p => {
+                if (p[e.id] || p[e.id] === 0){
+                    const fVal = typeof p[ e.id ] === 'string' ? (p[ e.id ]).trim() : p[ e.id ];
+                    const text = enumsRu[ fVal ] ? enumsRu[ fVal ] : fVal;
+                    if(!uniques.includes(fVal)) {
+                        let equality = fVal === elemVal;
+                        uniques.push(fVal);
+                        selectPresence = selectPresence ? selectPresence : equality;
+                        newOptions.push( create( 'option', {text: text, value: fVal, selected: equality} ) );
+                    }
+                }
+            });
+            e.innerHTML = '';
+            if (!selectPresence) {
+                e.appendChild(Object.assign(emptyOpt, {selected: true}));
+            } else {
+                e.append(emptyOpt);
+            }
+            newOptions.forEach(o => {
+                e.appendChild(o);
+            })
+        }
+
+        async function replaceOptions(elemId) {
+            let elem = el(elemId);
+            let newOptions = [];
+            let uniques = [];
+            let emptyOpt = create('option', {value:'none', text: '-Не Выбрано-'});
+            const sltd = elem?.value ? elem.value : null;
+            if (!elem.options || elem.options.selectedIndex === -1){
+                emptyOpt.selected = true;
+            }
+            allProducts.forEach(p => {
+                const trimVal = typeof p[ elemId ] === 'string' ? p[ elemId ].trim() : p[ elemId ];
+                const text = enumsRu[ trimVal ] ? enumsRu[ trimVal ] : trimVal;
+                if (!uniques.includes(trimVal)){
+                    uniques.push(trimVal);
+                    newOptions.push(create('option', {
+                        value: trimVal,
+                        text: text,
+                        selected: sltd && sltd !== 'none' && sltd === trimVal
+                    }));
+                }
+            });
+            elem.innerHTML = '';
+            elem.appendChild(emptyOpt);
+            newOptions.forEach(o => elem.appendChild(o));
+        }
+
+        function showOLCount(){
+            let count = 0;
+            if(constructors && constructors?.length > 0) {
+                count += constructors.length;
+            } else if (![null, 'undefined', '[]'].includes(storage.getItem('constructors'))){
+                constructors = JSON.parse(storage.getItem('constructors'));
+                count += constructors.length;
+            } else {
+                count = 0;
+            }
+            if(orderLines && orderLines?.length > 0) {
+                count += orderLines.length;
+            } else if (![null, 'undefined', '[]'].includes(storage.getItem('orderLines'))){
+                orderLines = JSON.parse(storage.getItem('orderLines'));
+                count += orderLines.length;
+            } else {
+                count += 0;
+            }
+            el('#orderLines').innerText = count.toString();
+        }
+
+        function openOrderCreationPage(){
+            userAuth.forEach(o => console.log("Auth: " + o.authority));
+            if (userAuth.find(obj => obj.authority === 'ROLE_STAFF') || userAuth.find(obj => obj.authoruty ==='ROLE_SYSADMIN')){
+                window.location.href='/shop/orders/new';
+            } else if (userAuth.find(obj => obj.authority === 'ROLE_USER' || obj.authority === 'ROLE_ANONYMOUS')) {
+                window.location.href='/shop/orders/basket/page';
+            } else {
+                return;
+            }
+        }
+
+        function reformatDate(date){
+            let nums = date.split('.');
+            let reformattedDate = '';
+            for (let i = nums.length - 1; i >= 0; i--){
+                reformattedDate += nums[i] + (i > 0 ? '-' : '');
+            }
+            return reformattedDate;
+        }
+
+        function createGoods(goodsArray, id, isForSale) {
+            if (!id) {
+                id = 'insertable';
+            }
+            el(id).innerHTML = '';
+            if (!goodsArray) return;
+            for (const product of goodsArray) {
+                const infoDiv = Object.assign(document.createElement('div'), {className: (product.available ? 'info' : 'info-baw')});
+                const productDiv = Object.assign(document.createElement('div'), {className: (product.available ? 'goods' : 'goods-baw')});
+                const imgHolder = Object.assign(document.createElement('div'), {className: 'product-img'});
+                for (let field of Object.keys(product)) {
+                    if (!field.includes('Ru') && !field.includes('Str') && product[field] !== null) {
+                        if (field !== 'pictures') {
+                            const value = typeof product[field] === 'string' ? product[field].trim() : product[field];
+                            const divField = Object.assign(document.createElement('div'), {
+                                name: field,
+                                id: field + "_" + value,
+                                innerText: (['nomination', 'brand', 'model'].includes(field) ? '' :
+                                        (fieldNamesRu[field] ? fieldNamesRu[field] + ': ' : field + ': '))
+                                    + (product[field + 'Ru'] ? product[field + 'Ru'] : (enumsRu[value]
+                                        ? enumsRu[value] : value))
+                                    + (field.includes('price') ? ' ₴' : ''),
+                                className: (['nomination', 'brand', 'price', 'model'].includes(field)
+                                    ? 'product-' + field : 'product-field')
+                            });
+                            if (['nomination', 'brand', 'model', 'price'].includes(field)) {
+                                productDiv.appendChild(divField);
+                            } else {
+                                infoDiv.appendChild(divField);
+                            }
+                        } else {
+                            if (product['pictures'].length > 0) {
+                                [...product['pictures']].forEach(pic => {
+                                    if (product['pictures'].indexOf(pic) === 0) {
+                                        const image = Object.assign(document.createElement('img'), {
+                                            className: (product.available ? 'product-img' : 'product-img-baw'),
+                                            id: pic.id.trim(), alt: (pic.id.trim() + pic.name.trim()),
+                                            src: 'data:' + pic.type.trim() + ';base64,' + pic.content
+                                        });
+                                        imgHolder.appendChild(image);
+                                    }
+                                });
+                            } else {
+                                const image = Object.assign(document.createElement('img'), {
+                                    className: 'product-img',
+                                    src: '/no-image.png', alt: 'no-image'
+                                });
+                                imgHolder.appendChild(image);
+                            }
+                        }
+                    }
+                    productDiv.appendChild(imgHolder);
+                }
+                const buyBtn = Object.assign(document.createElement('button'), {
+                    id: product.id.trim(),
+                    className: 'buy',
+                    innerText: isForSale ? 'Купить' : 'Добавить',
+                });
+                if(!product.available){
+                    buyBtn.disabled = true;
+                }
+                if (!isForSale){
+                    buyBtn.onclick = () => addProduct(event);
+                } else {
+                    buyBtn.onclick = () => addToBasket(event);
+                    productDiv.onclick = (event) => openPageOrAddToBasket(event, product.id);
+                }
+                productDiv.appendChild(buyBtn);
+                productDiv.appendChild(infoDiv);
+                el(id).appendChild(productDiv);
+            }
+        }
+
+        function elemsAsArray(selector){
+            return Array.from(document.querySelectorAll(selector));
+        }
+
+        function addToBasket(event){
+            let id = event.target.id;
+            let orderLine = {
+                productId: (id),
+                amount: 1,
+            }
+            let storageOLs = JSON.parse(storage.getItem('orderLines'));
+            let present = storageOLs !== null ? storageOLs.find(ol => ol.productId === id) : null;
+
+            if (storageOLs && present){
+                storageOLs.forEach(ol => {
+                    if(ol.productId === id){
+                        ol.amount++;
+                    }
+                });
+            } else if(storageOLs && !present){
+                storageOLs.concat(orderLine);
+                storageOLs.push(orderLine);
+            } else {
+                storageOLs = [orderLine];
+            }
+            if (storageOLs) {
+                orderLines = storageOLs;
+                storage.setItem('orderLines', JSON.stringify(storageOLs));
+            }
+            showOLCount();
+        }
+
+        function openPageOrAddToBasket(event, id){
+            if (event.target.className === 'buy'){
+                addToBasket(event);
+            } else {
+                return window.location=`/shop/products/details/${id}`;
+            }
+        }
+
+        async function removeEntity(target, id){
+            if (confirm('Вы уверенны, что хотите удалить?')) {
+                console.log("RemoveEntity()! " + id)
+                let url = '/shop/api/users/rm/' + (target.id === 'rmCustomer' ? 'customer/' : '') + id;
+                console.log('URL: ' + url);
+                let response = await fetch(url, {method: 'DELETE'});
+                if (response.ok) {
+                    alert("Customer removed: " + document.querySelector('#userSearchInput').value);
+                    setTimeout(() => { window.location.reload() }, 1500);
+                }
+            }
+        }
+
+        function getDateNow(){
+            const date = new Date();
+            return `${date.getDay()}.${date.getMonth()}.${date.getFullYear()}`;
+        }
+
+        String.prototype.set = function(index, subSeq) {
+            if (index >= 0) {
+                return this.substring(0, index) + subSeq + this.substring(index);
+            } else {
+                return this.substring(0, this.length + index) + subSeq + this.substring(this.length + index);
+            }
+        }
+    </script>
+</th:block>
+
+<th:block th:fragment="products-from-server">
+    <script data-th-inline="javascript" name="thymeleaf-injection">
+        let productsFromServer = [[ ${ products } ]];
+    </script>
+</th:block>
+
+<th:block th:fragment="amount-control-script">
+    <script>
+        function addAmountListeners() {
+            for (let amountController of Array.from(document.querySelectorAll('.product-amount'))) {
+                amountController.addEventListener('change', event => {
+                    document.querySelector(`.pTotal[name="${amountController.name}"]`).innerText
+                        = putCommaToNumber((+event.target.value *
+                        (+extractIntValue(document.querySelector(`.pPrice[name="${amountController.name}"]`).innerText))), 'price');
+                    redactOLinesAtStorage(amountController.value, amountController.name);
+                });
+            }
+            for (let amountControlElem of Array.from(document.querySelectorAll('.amount-control'))) {
+                amountControlElem.addEventListener('click', event => {
+                    if (event.target.className === 'product-amount') {
+                        return;
+                    } else if (event.target.className === 'reduce-button' || event.target.className === 'increase-button') {
+                        const name = event.target.name;
+                        let amount = document.querySelector(`.product-amount[name="${event.target.name}"]`);
+                        if (event.target.className === 'reduce-button') {
+                            if (amount.value > 1) {
+                                amount.value -= 1;
+                            }
+                        } else {
+                            amount.value = +amount.value + 1;
+                        }
+                        redactOLinesAtStorage(amount.value, event.target.name);
+                        document.querySelector(`.pTotal[name="${name}"]`).innerText =
+                            putCommaToNumber(+extractIntValue(document.querySelector(`.pPrice[name="${name}"]`).innerText)
+                                * (+amount.value), 'price');
+                        if (document.querySelector('#orderTotal') !== null) {
+                            let total = 0;
+                            for (let productAmount of Array.from(document.querySelectorAll('.pTotal'))) {
+                                total += +extractIntValue(productAmount.innerText);
+                            }
+                            document.querySelector('#orderTotal').innerText = putCommaToNumber(total, 'price') + ' ₴';
+                        }
+                    } else {
+                        return;
+                    }
+                });
+            }
+        }
+
+        function redactOLinesAtStorage(amount, name) {
+            if (!['undefined', null, '[]'].includes(storage.getItem('orderLines')) || orderLines?.length > 0) {
+                let line = orderLines.splice(orderLines.indexOf(orderLines.find(ol => ol.productId.trim() === name.trim())), 1)[0];
+                line.amount = +amount;
+                orderLines.push(line);
+                storage.setItem('orderLines', JSON.stringify(orderLines));
+            }
+        }
+
+        function listenerClick(event) {
+            if (event.target.className === 'product-amount') {
+                return;
+            } else if (event.target.className === 'reduce-button' || event.target.className === 'increase-button') {
+                const name = event.target.name;
+                let amount = document.querySelector(`.product-amount[name="${event.target.name}"]`);
+                if (event.target.className === 'reduce-button') {
+                    if (amount.value > 1) {
+                        amount.value -= 1;
+                    }
+                } else {
+                    amount.value = +amount.value + 1;
+                }
+                document.querySelector(`.pTotal[name="${name}"]`).innerText =
+                    putCommaToNumber(+extractIntValue(document.querySelector(`.pPrice[name="${name}"]`).innerText)
+                        * (+amount.value), 'price');
+
+                if (document.querySelector('#orderTotal') !== null) {
+                    let total = 0;
+                    for (let productAmount of Array.from(document.querySelectorAll('.pTotal'))) {
+                        total += +extractIntValue(productAmount.innerText);
+                    }
+                    console.log('total: ' + total);
+                    document.querySelector('#orderTotal').innerText = putCommaToNumber(total, 'price') + ' ₴';
+                }
+                redactOLinesAtStorage(amount.value, amount.name);
+            } else {
+                return;
+            }
+        }
+
+        function setOrderTotal() {
+            if (document.querySelector('#orderTotal') !== null) {
+                let total = 0;
+                for (let productAmount of Array.from(document.querySelectorAll('.pTotal'))) {
+                    let elemInnerText = productAmount.innerText;
+                    if (elemInnerText) {
+                        total += +extractIntValue(productAmount.innerText);
+                    }
+                }
+                console.log('total: ' + total);
+                document.querySelector('#orderTotal').innerText = (total + '').set(-2, ',') + ' ₴';
+            }
+        }
+
+    </script>
+</th:block>
+
+<th:block th:fragment="singe-product-css">
+    <style>
+        body {
+            width: 100%;
+            min-height: 100%;
+            min-width: 300px;
+            height: auto;
+            overflow-y: scroll;
+        }
+
+        #insertable {
+            position: relative;
+            left: 0;
+            top: 4rem;
+            width: 100%;
+            height: auto;
+        }
+
+        #additional-product-parameters {
+            position: absolute;
+            left: 0;
+            top: 4rem;
+            width: 10vw;
+            height: 15rem;
+        }
+
+        .field {
+            position: absolute;
+            left: max(150px, min(450px, 47vw));
+            width: 250px;
+            padding-left: 10px;
+            border-radius: 10px;
+            background-color: rgb(249, 248, 245);
+        }
+
+        .field-description {
+            position: fixed;
+            left: 10vw;
+            right: 10vw;
+            height: auto;
+            background-color: white;
+            padding: 10px 10px 10px 10px;
+            border-radius: 10px;
+        }
+
+        .product-images {
+            position: absolute;
+            left: 0;
+            top: 0;
+            min-width: 120px;
+            min-height: 120px;
+            max-width: 400px;
+            max-height: 400px;
+            width: 40vw;
+            height: 40vw;
+            border-radius: 5px;
+            overflow: hidden;
+            cursor: pointer;
+        }
+
+        .picture {
+            width: 35vw;
+            height: auto;
+        }
+
+        .show {
+            position: fixed !important;
+            left: 0 !important;
+            width: 100vw !important;
+            height: 100% !important;
+            z-index: 150;
+            background-size: 110vw !important;
+        }
+
+        .amount-control {
+            display: inline-flex;
+            position: absolute;
+            top: 293px;
+            right: 5vw;
+            width: 100px;
+            height: 16px;
+            white-space: unset;
+            flex-wrap: wrap;
+        }
+
+        .amount-control input {
+            border-left: 0;
+            border-right: 0;
+            margin-left: 0;
+            margin-right: 0;
+            text-align: center;
+            width: 32px;
+        }
+
+        .amount-control input[type='button']{
+            cursor: pointer;
+        }
+        .amount-control input[type='button']:hover {
+            background-color: lightgreen;
+        }
+
+        #product-total-price {
+            position: absolute;
+            right: 5vw;
+            top: 47rex;
+            width: 8rem;
+            height: 1rem;
+            padding-left: 10px;
+            border-radius: 4px;
+            background-color: cyan;
+        }
+
+        #buy-button {
+            position: absolute;
+            right: 5vw;
+            top: 320px;
+            width: 100px;
+            height: 24px;
+            background-color: gold;
+            margin-top: 40px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        #buy-button:hover {
+            border: 3px black;
+            box-shadow: 1px 1px 10px;
+        }
+
+        #buy-button:disabled, #buy-button:disabled:hover{
+            background-color: gray;
+            color: white;
+            border-color: white;
+            cursor: default;
+        }
+
+        .product_img_holder {
+            position: relative;
+            left: 2rem;
+            top: -3rem;
+            height: 46vw;
+            width: 40vw;
+            min-width: 125px;
+            max-width: 400px;
+            min-height: 164px;
+            max-height: 440px;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+
+        .img-selector {
+            display: inline-block;
+            position: absolute;
+            left: 0;
+            bottom: 0;
+            width: 40vw;
+            min-width: 120px;
+            max-width: 394px;
+            height: 35px;
+            background-color: white;
+            border: 4px double oldlace;
+            border-radius: 5px;
+            z-index: 99;
+        }
+
+        .img-selector img {
+            width: 50px;
+            height: 30px;
+            margin-left: 3px;
+            border: 2px double;
+            cursor: pointer;
+        }
+
+        #product-description{
+            position: fixed;
+            left: 3rem;
+            right: 3rem;
+            top: 38rem;
+            cursor: default;
+        }
+
+        .form-update {
+            position: absolute;
+            top: 50px;
+            z-index: 100;
+            right: 3vw;
+        }
+
+        .btn-update, .btn-rm, .btn-update:active, .btn-rm:active {
+            color: white;
+            background-color: red;
+            border: 3px wheat;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+
+        .btn-update:hover, .btn-rm:hover {
+            background-color: #e54747;
+            box-shadow: 1px 1px 1px 1px black;
+            cursor: pointer;
+        }
+
+        .description{
+            background-color: wheat !important;
+            border-radius: 10px;
+            padding: 10px 10px 10px 20px;
+        }
+    </style>
+</th:block>
+
+<th:block th:fragment="modal-address-form">
+    <style>
+        .modal, .modal-address {
+            position: fixed;
+            inset: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            cursor: pointer;
+            z-index: 99;
+        }
+
+        .customer {
+            position: relative;
+            max-width: 600px;
+            height: -webkit-fill-available;
+            background-color: wheat;
+            margin: 20px 0 20px 0;
+            color: #000;
+            border-radius: 16px;
+            padding: 30px;
+            cursor: default;
+        }
+
+        #showModal {
+            color: black;
+            margin-block-end: 10px;
+            margin-block-start: 10px;
+            border-radius: 3px;
+            border: 2px double gold;
+            box-shadow: 1px 3px 4px black;
+        }
+
+        #showModal:hover {
+            border-color: lightgreen;
+            box-shadow: 1px 4px 4px 3px black;
+            background-color: gold;
+        }
+
+        #container, #container-two {
+            position: relative;
+            padding: 20px 20px 20px 20px;
+            margin: 40vh auto auto auto;
+            bottom: 50px;
+            height: 20vh;
+            min-height: 250px;
+            max-height: 400px;
+            width: 40vw;
+            min-width: 270px;
+            max-width: 600px;
+            border-radius: 10px;
+            background-color: white;
+            cursor: default;
+        }
+
+        #container-two {
+            height: fit-content;
+            padding-block-start: 50px;
+            padding-block-end: 30px;
+            justify-content: center;
+            z-index: 1;
+        }
+
+        #container-two select {
+            width: 140px;
+            margin-block-end: 10px;
+            border-radius: 3px;
+        }
+
+        #container-two input {
+            width: 30vw;
+            min-width: 140px;
+            max-width: 250px;
+            border-color: gainsboro;
+            border-radius: 3px;
+        }
+
+        #customerList {
+            position: absolute;
+            top: 70px;
+            width: 40vw;
+            min-width: 250px;
+            max-width: 600px;
+            height: 20vh;
+            min-height: 200px;
+            max-height: 450px;
+            border-radius: 10px;
+            padding: 5px 10px 5px 10px;
+            border: 2px double;
+            background-color: azure;
+            overflow-y: scroll;
+            scrollbar-width: none;
+        }
+
+        .modal-close {
+            border: 1px double black;
+            position: absolute;
+            right: 12px;
+            top: 10px;
+            width: 2px;
+            height: 10px;
+            font-size: xx-small;
+            padding: 0 6px 3px 1px;
+            cursor: pointer;
+        }
+
+        .modal-close:hover{
+            box-shadow: 1px 1px 1px 1px black;
+        }
+
+        .btn-save{
+            width: 150px;
+            justify-self: center;
+            border-radius: 3px;
+        }
+
+        .existedAddress {
+            position: relative;
+            height: 70px;
+            border: 4px green;
+            padding: 10px 10px 15px 15px;
+            border-radius: 4px;
+            background-color: lightgreen;
+            box-shadow: 2px 2px 5px black;
+            text-align: center;
+            font-size: 14px;
+            margin-block-end: 10px;
+            justify-self: center;
+        }
+
+        #changeAddress {
+            position: absolute;
+            bottom: 10px;
+            right: 2vw;
+            padding: 5px 5px 5px 5px;
+            cursor: pointer;
+        }
+
+        #assignedCustomerInfo {
+            position: relative;
+            height: 70px;
+            border: 4px green;
+            padding: 10px 10px 15px 15px;
+            border-radius: 4px;
+            background-color: lightgreen;
+            box-shadow: 2px 2px 5px black;
+            text-align: center;
+            font-size: 14px;
+            margin-block-end: 10px;
+            justify-self: center;
+        }
+
+    </style>
+
+    <div class="modal-address" style="display: none;" onclick="showHideModal(event)">
+        <div id="container-two" style="display: grid;">
+            <span onclick="showHideModal(event)" class="modal-close">✕</span>
+            <label for="deliveryService">Достака: </label>
+            <select id="deliveryService" onchange="showHideFormFields()">
+                <option value="Новая Почта">Новая Почта</option>
+                <option value="УкрПочта">Укрпочта</option>
+                <option value="Mist Express">MistExpress</option>
+            </select>
+            <label for="deliveryType">Выберите тип доставки: </label>
+            <select id="deliveryType" onchange="showHideFormFields()">
+                <option value="В отделение">В отделение</option>
+                <option value="В почтомат">В почтомат</option>
+                <option value="Курьером">Курьером</option>
+            </select>
+            <label for="country">Страна: </label><input disabled id="country" value="Украина">
+            <label for="region">Область: </label><input id="region" placeholder="Область" list="regions"><datalist id="regions"></datalist>
+            <label for="city">Город/район: </label><input id="city" placeholder="Город" list="cities"><datalist id="cities"></datalist>
+            <label for="settlement">Населенный пункт: </label><input id="settlement" placeholder="Нас. пункт" list="settlements"><datalist id="settlements"></datalist>
+            <label for="deliveryDepartment">Номер отделения: </label><input id="deliveryDepartment" oninput="checkFieldsFilled()" placeholder="Отделение" list="departments"><datalist id="departments"></datalist>
+            <label for="parcelTerminal">Почтомат: </label><input id="parcelTerminal" oninput="checkFieldsFilled()" placeholder="Почтомат" list="terminals"><datalist id="terminals"></datalist>
+            <label for="street">Улица: </label><input id="street" placeholder="Улица" list="streets"><datalist id="streets"></datalist>
+            <label for="apartment">Дом (дом, квартира): </label><input id="apartment" oninput="checkFieldsFilled()" placeholder="Дом">
+            <br>
+            <button disabled class="btn-save" onclick="setNewDeliveryAddress()" name="btn-save-address">Подтвердить адресс</button>
+        </div>
+    </div>
+
+    <div class="modal" style="display: none;" onclick="showHideModal(event)">
+        <div id="container" >
+            <input hidden id="orderCustomerId">
+            <span onclick="showHideModal(event)" class="modal-close">✕</span>
+            <label >Найти пользователя:
+                <input type="search" autocomplete="off" id="userSearchInputElem" list="userSearchSuggestions" placeholder="Поиск"
+                       oninput="makeSuggestions(this)" onchange="showCustomerList(this)">
+                <datalist id="userSearchSuggestions"></datalist>
+            </label>
+            <div class="customer" id="customerHolder"></div>
+            <div id="customerList" style="display: none;"></div>
+        </div>
+    </div>
+
+    <script name="modal-address-script">
+
+        function showHideModal(event){
+            if(event.target === el('.modal')){
+                el('.modal').style.display = 'none';
+            } else if (event.target === el('.modal-address')){
+                if (el('.existedAddress')){
+                    el('showAddressModal').style.display = 'none';
+                }
+                el('.modal-address').style.display = 'none';
+            } else if (event.target.className === 'modal-close'){
+                event.target.parentElement.parentElement.style.display = 'none';
+            } else if (event.target === el('showModal') ) {
+                el('.modal').style.display = 'block';
+            } else if (event.target === el('showAddressModal')){
+                el('.modal-address').style.display = 'block';
+                showHideFormFields();
+            } else {
+                return
+            }
+        }
+
+        async function showCustomerList(target){
+            if (!target.value) return;
+            let customerList = document.querySelector('#customerList');
+            if (customerList.children.length < 2 ) return;
+            customerList.style.display = 'block';
+        }
+
+        function makeSuggestions(target){
+            if (!target.value || target.value?.length < 3) return;
+            makeCustomerDataSuggestions();
+            makeCustomersSuggestions(target.value);
+        }
+
+        async function makeCustomerDataSuggestions(){
+            let dataList = document.querySelector('#userSearchSuggestions');
+            dataList.innerHTML = '';
+            let promise = await fetch('/shop/data/customers/search/'
+                + document.querySelector('#userSearchInputElem').value )
+            await promise.json().then(data => data.forEach(str => {
+                dataList.appendChild(Object.assign(document.createElement('option'), {
+                    value: str.trim(),
+                    textContent: str.trim()
+                }));
+            }));
+        }
+
+        async function makeCustomersSuggestions(elemValue){
+            let customerList = document.querySelector('#customerList');
+            let promise = await fetch('/shop/api/users/search/' + elemValue);
+            let listHtml = '<h3 style="margin: 5px 5px 5px 5px;">Выберите пользователя</h3>';
+            await promise.json().then(data => data.forEach(c => {
+                let text = `Id: ${c.id.trim()}; Логин: ${c.user.login?.trim()} Имя: ${c.lname?.trim() + ' ' + c.fname?.trim() + ' ' + c.fatherName?.trim()};
+                    Тел: ${c.contact.phone?.trim()}; Email: ${c.contact.email?.trim()}`;
+                let div = `<hr><div onclick="setToParent(this, '#customerHolder')" id="${c.id.trim()}">${text}</div><br>`;
+                listHtml += div;
+            }));
+            customerList.innerHTML = listHtml;
+        }
+
+        function setToParent(target, destinationElemId, rowNumber, pPrice) {
+            if (destinationElemId !== '#customerHolder' && checkIsAdded(target.id)) {
+                alert("Товар уже добавлен! Id:" + target.id);
+                return;
+            }
+            let div = document.querySelector('#' + target.id).cloneNode(true);
+            div.onclick = '';
+            div.id = '';
+            document.querySelector(destinationElemId + (rowNumber ? rowNumber : '')).innerHTML = div.innerHTML;
+
+            switch (destinationElemId) {
+                case ('#divProductInfo') : {
+                    document.querySelector('#content' + rowNumber).innerHTML = div.innerHTML;
+                    document.querySelector('#productId' + rowNumber).value = target.id;
+                    document.querySelector('#productPrice' + rowNumber).value = pPrice;
+                    document.querySelector('#list' + rowNumber).style.display = 'none';
+                    document.querySelector('#oLProductSelected' + rowNumber).style.display = 'block';
+                    document.querySelector('#oLProductAmount' + rowNumber).firstElementChild.style.display = 'inline-flex';
+                    document.querySelector('#content' + rowNumber).innerText = target.id;
+                    setTotalPrices();
+                    break;
+                }
+                case ('#customerHolder') : {
+                    document.querySelector('#orderCustomerId').value = target.id;
+                    document.querySelector('#customerList').style.display = 'none';
+                    if (document.querySelector('#assignedCustomerInfo')) {
+                        document.querySelector('#assignedCustomerInfo').innerHTML =
+                            '<h3 style="margin-block-end: 10px; margin-block-start: 10px;">Заказчик: </h3><br>' + div.innerHTML;
+                        document.querySelector('#assignedCustomerInfo').style.display = 'block';
+                    } else  {
+                        changeOrderCustomer();
+                    }
+                    break;
+                }
+            }
+        }
+
+        function checkIsAdded(newProductId){
+            let allProdIdInputs = Array.from(document.querySelectorAll('input[name="productId"]'));
+            for(let inp of allProdIdInputs){
+                if (inp.value === newProductId){
+                    console.log("Input val: " + inp.value + ", New productId: " + newProductId);
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        function showHideFormFields(){
+            let delServ = el('deliveryService');
+            let delType = el('deliveryType');
+            Array.from(document.querySelectorAll('.modal-address input'))
+                .forEach(i => {
+                    i.style.display = 'block';
+                    getLabel(i.id).style.display = 'block';
+                });
+            delType.children[1].style.display = ['Mist Express', 'УкрПочта'].includes(delServ.value) ? 'none' : 'block';
+            delType.children[2].style.display = delServ.value === 'Mist Express' ? 'none' : 'block';
+            delType.children[ delType.selectedIndex && delType.children[delType.selectedIndex].style.display !== 'none'
+                        ? delType.selectedIndex : 0 ].selected = true;
+            let idToBeHidden;
+            switch (delType.value) {
+                case 'В отделение': idToBeHidden = ['street', 'apartment', 'parcelTerminal'];
+                    break;
+                case 'Курьером': idToBeHidden = ['deliveryDepartment', 'parcelTerminal'];
+                    break;
+                case 'В почтомат': idToBeHidden = ['street', 'deliveryDepartment', 'apartment'];
+                    break;
+                default:
+                    break;
+            }
+            idToBeHidden.forEach(id => {
+                el(id).style.display = 'none';
+                el(id).value = '';
+                getLabel(id).style.display = 'none';
+            });
+        }
+
+        function checkFieldsFilled(){
+            let elems = Array.from(document.querySelectorAll(".modal-address select, .modal-address input"))
+                    .filter(e => e.style.display !== 'none');
+            let elemsCount = elems.length;
+            let filledElems = 0;
+            for (let e of elems){
+                if (e.value) {
+                    filledElems++;
+                }
+            }
+            document.querySelector('.btn-save').disabled = elemsCount - 1 > filledElems;
+        }
+
+        function setNewDeliveryAddress(){
+            let address = '';
+            let fields = Array.from(document.querySelectorAll('.modal-address input:not([style="display:none"]), .modal-address select:not([style="display:none"])'));
+            for (let e of fields){
+                if(e.value) {
+                    address += ` ${(fieldNamesRu[e.id] ? fieldNamesRu[e.id] : e.id) + ': '}${e.value
+                        ? (enumsRu[e.value] ? enumsRu[e.value] : e.value) : ''}.`;
+                }
+            }
+            deliveryAddress = address.trim();
+            showAddress();
+            el('.modal-address').style.display = 'none';
+            el('showAddressModal').style.display = 'none';
+        }
+
+        function openAddressForm(){
+            document.querySelector('.modal-address').style.display = 'grid';
+            document.querySelector('.modal-address').addEventListener('change', checkFieldsFilled);
+            showHideFormFields();
+        }
+
+        function toStringAddress(address){
+            let result = '';
+            let keys = Object.keys(address).find(k => address[k] && address[k] !== '');
+            for (let key of keys){
+                if (address[key]){
+                    result += (enumsRu[key] ? enumsRu[key] : key) + ': ' + address[key].trim() + (keys.indexOf(key) < keys.length - 2 ? ', ' : '.')
+                }
+            }
+            deliveryAddress = result;
+            return result;
+        }
+
+        function showAddress(){
+            if (!deliveryAddress) return;
+            if(document.querySelector('.existedAddress')){
+                document.querySelector('.existedAddress').remove();
+            }
+            let title = Object.assign(document.createElement('div'), {style:'font-size:16px', innerText:'АДРЕСС ДОСТАВКИ'});
+            let changeAddress =  Object.assign(document.createElement('u'), {innerText:'Изменить', id:'changeAddress',
+                onclick: () => openAddressForm()});
+            changeAddress.style.color = 'blue';
+            let div = Object.assign(document.createElement('div'), {className:'existedAddress', innerText:deliveryAddress});
+            div.insertAdjacentElement("afterbegin", title);
+            div.appendChild(changeAddress);
+            document.querySelector('#mainField').insertAdjacentElement('afterbegin', div);
+        }
+    </script>
+</th:block>

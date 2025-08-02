@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <th:block th:insert="~{fragments/commons :: head}"></th:block>
+    <title>AdminPage</title>
+    <style>
+        table, th, td {
+            border: 2px double black;
+            border-radius: 3px;
+            cursor: default;
+        }
+        table tr:not(thead tr):hover {
+            cursor: pointer;
+            background-image: linear-gradient(183deg, lightskyblue, white 50%, lightskyblue);
+        }
+    </style>
+</head>
+<body>
+<th:block th:insert="~{fragments/commons :: nav-bar}"></th:block>
+<th:block th:insert="~{fragments/commons :: side-bar}"></th:block>
+
+<div id="mainField" class="main-field">
+    <div id="spare-insertable"></div>
+    <div id="insertable">
+        <table>
+            <thead>
+                <tr>
+                    <td>Id</td>
+                    <td>Логин</td>
+                    <td>ФИО</td>
+                    <td>Контакты</td>
+                    <td>Адресс</td>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="customer : ${customerList}" onclick="openCustomerInfo(this)" th:name="${customer.getId().strip()}" th:id="${customer.getId().strip()}">
+                    <td th:utext="${customer.getId()}"></td>
+                    <td th:utext="${customer.getUser() != null ? customer.getUser().getLogin() : ''}"></td>
+                    <td>
+                        <span th:utext="${customer.getLName()}"></span>
+                        <span th:utext="${customer.getFName()}"></span>
+                        <span th:utext="${customer.getFatherName()}"></span>
+                    </td>
+                    <td>
+                        <label>E-mail: </label><br><span th:utext="${customer.getContact() != null ? customer.getContact().getEmail() : ''}"></span>
+                        <label>Телефон: </label><br><span th:utext="${customer.getContact() != null ? customer.getContact().getPhone() : ''}"></span>
+                    </td>
+                    <td th:utext="${customer.getAddress().toInlineOrEmpty()}"></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<th:block th:insert="~{fragments/commons :: home-btn-and-service-script}"></th:block>
+
+<script>
+    window.onload = () => {
+        el('#menu-btn').addEventListener('click', () => activateMenuListener('spare-insertable', true));
+        showUnchecked();
+    }
+
+    function openCustomerInfo(target){
+        let id = target.nodeName === 'tr' ? target.id : target.closest('tr').id;
+        window.location.href = `/shop/api/users/page/${id}`;
+    }
+</script>
+
+</body>
+</html>

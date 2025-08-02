@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <th:block th:insert="~{fragments/commons :: head}"></th:block>
+    <title>Создание пользователя</title>
+    <style>
+        body {
+            width: 100%;
+            height: 100%;
+            align-content: center;
+            justify-items: center;
+        }
+
+        #form-user, #address-form {
+            margin: 20px auto 20px auto;
+            width: 40vw;
+            min-width: 300px;
+            max-width: 600px;
+            background-color: white;
+            padding: 10px 10px 10px 10px;
+            border: 4px double black;
+            border-radius: 10px;
+            box-shadow: 3px 4px 5px;
+            justify-items: center;
+        }
+
+        #form-user select, #address-form select {
+            border-radius: 4px;
+            margin-block-end: 5px;
+        }
+
+        #form-user input, #address-form input {
+            width: 35vw;
+            border-radius: 5px;
+            margin-block-end: 5px;
+            min-width: 250px;
+            max-width: 600px;
+        }
+
+        .wide{
+            display: grid;
+            min-width: 250px;
+            max-width: 600px;
+            width: 35vw;
+        }
+
+        #form-user p, #address-form p {
+            margin-block-start: 0;
+            margin-block-end: 0;
+        }
+
+        #btn-save-user:enabled{
+            margin: 0 auto 30px auto;
+            background-color: lightgreen;
+            width: 40vw;
+            min-width: 250px;
+            max-width: 600px;
+            height: auto;
+            border: 2px white;
+            border-radius: 5px;
+            font-size: 12px;
+            box-shadow: 1px 2px 2px darkslategray;
+        }
+
+        #btn-save-user:disabled{
+            pointer-events: none;
+            background-color: lightgrey;
+        }
+
+        #btn-save-user:hover {
+            background-color: green;
+            color: white;
+            border: 3px white;
+            border-radius: 5px;
+            box-shadow: 4px 4px 2px black;
+        }
+
+        .main-field {
+            height: auto !important;
+            background-color: lightgray;
+            align-content: center;
+            justify-items: center;
+            min-height: 100vh;
+            overflow-y: scroll;
+        }
+    </style>
+</head>
+<body>
+<th:block th:insert="~{fragments/commons :: nav-bar}"></th:block>
+<th:block th:insert="~{fragments/commons :: side-bar}"></th:block>
+
+<div class="main-field" id="mainField">
+    <div id="spare-insertable"></div>
+    <div id="insertable">
+        <form id="form-user">
+            <h3>Создать пользователя:</h3>
+
+            <label hidden style="background-color: red; color: white;" id="message"></label>
+            <label hidden id="genPass"></label>
+
+            <label for="login" class="wide">*Логин: </label>
+            <input id="login" onchange="checkLogin(this)" placeholder="Логин">
+            <br>
+
+            <label for="pass" style="display: none;" class="wide">*Password: </label>
+            <input id="pass" style="display: none;" placeholder="Пароль">
+            <a href="javascript:showHidePassInput()">Ввести пароль</a>
+
+            <label for="authority" class="wide" th:style="${#authorization.expression('hasRole(''SYSADMIN'')') ? 'display: block;' : 'display: none;'}">*Роль: </label>
+            <select th:style="'width: 305px;' + ${#authorization.expression('hasRole(''SYSADMIN'')') ? 'display: block;' : 'display: none;'}" id="authority">
+                <option selected value="ROLE_USER">Пользователь</option>
+                <option value="ROLE_STAFF">Персонал</option>
+                <option value="ROLE_SYSADMIN">Сис.Администратор</option>
+            </select>
+
+            <label for="email" class="wide">*Электронная почта: </label>
+            <input id="email" onchange="checkEmail(this)" placeholder="Email">
+
+            <label for="phone" class="wide">*Телефон: </label>
+            <input id="phone" onchange="checkPhone(this)" placeholder="Тел">
+
+            <label for="surname" class="wide">Фамилия: </label>
+            <input id="surname" type="text" placeholder="Фамилия">
+
+            <label for="name" class="wide">Имя: </label>
+            <input id="name" type="text" placeholder="Имя">
+
+            <label for="fatherName" class="wide">Отчество: </label>
+            <input id="fatherName" type="text" placeholder="Отчество">
+
+            <label for="born" class="wide">*Дата рождения: </label>
+            <input id="born" type="date" onchange="checkDateOfBirth(this)"/>
+            <br>
+            <a href="javascript:flipFlop('address-form')">Ввести/не вводить Адресс</a>
+        </form>
+
+        <form style="display:none;" id="address-form">
+
+            <h3>Сервис и адресс доставки: </h3>
+
+            <label for="deliveryService">Сервис:
+                <select id="deliveryService" onchange="showHideFormFields(event)">
+                <option value="Новая Почта">Новая Почта</option>
+                <option value="Укрпочта">Укрпочта</option>
+                <option value="MistExpress">MistExpress</option>
+            </select>
+            </label>
+
+            <label for="deliveryType">Тип доставки:
+                <select id="deliveryType" onchange="showHideFormFields(event)">
+                <option value="В отделение">В отделение</option>
+                <option value="В почтомат">В почтомат</option>
+                <option value="Курьером">Курьером</option>
+            </select>
+            </label>
+            <br><br>
+
+            <label for="country" class="wide">Страна: </label>
+            <input id="country" value="Украина" disabled>
+
+            <label for="region" class="wide">Область: </label>
+            <input id="region" list="regions" placeholder="Область">
+            <datalist id="regions"></datalist>
+
+            <label for="city" class="wide">Город/р-н: </label>
+            <input id="city" list="cities" placeholder="Город/Район">
+            <datalist id="cities"></datalist>
+
+            <label for="settlement" class="wide">Нас. пункт: </label>
+            <input id="settlement" placeholder="нас. пункт">
+
+            <label for="street" class="wide">Улица: </label>
+            <input id="street" placeholder="Удица">
+
+            <label for="apartment" class="wide">Дом/квартира: </label>
+            <input id="apartment" placeholder="Дом/кв.">
+
+            <label for="deliveryDepartment" class="wide">Номер отделения: </label>
+            <input id="deliveryDepartment" placeholder="Отделение №">
+
+            <label for="parcelTerminal" class="wide">Почтомат: </label>
+            <input id="parcelTerminal" placeholder="Почтомат">
+        </form>
+        <br>
+        <button id="btn-save-user" disabled onclick="saveUser()">Сохранить пользователя</button>
+    </div>
+</div>
+
+<th:block th:insert="~{fragments/commons ::home-btn-and-service-script}"></th:block>
+
+<script data-th-inline="javascript">
+    const customer = [[ ${ customer } ]];
+    const serverMessage = [[ ${ message } ]];
+</script>
+
+<script>
+
+    window.onload = () => {
+        if (serverMessage){
+            alert(serverMessage);
+        }
+        if (customer) {
+            fillFieldsWithExistValues(customer)
+        }
+        showHideFormFields();
+        document.querySelector('#address-form').addEventListener('change', checkAddressInputs);
+        createRegionsSuggestions();
+        el('#menu-btn').addEventListener('click', () => activateMenuListener('spare-insertable', true));
+        showUnchecked();
+    }
+
+    function fillFieldsWithExistValues(customer){
+        let elems = Array.from(document.querySelectorAll("#insertable input"))
+            .concat(Array.from(document.querySelectorAll('#insertable select')));
+        let keys = Object.keys(customer).filter(k => customer[k]);
+        for (let key of keys) {
+            let elem = elems.find(e => e.id === key);
+            let productFValue = typeof customer[key] === 'string' ? customer[key].trim() : customer[key];
+
+            if (elem && productFValue) {
+
+                switch (elem.nodeName) {
+                    case ('INPUT') : {
+                        if (elem.type !== 'date') {
+                            elem.value = productFValue;
+                            break;
+                        } else {
+                            elem.value = reformatDate(productFValue);
+                            break;
+                        }
+                    }
+                    case ('SELECT') : {
+                        elem.value = Array.from(elems.children).find(o => o.value === productFValue).selected = true;
+                        break;
+                    }
+                }
+
+            }
+            if (key === "id"){
+                let idInput = Object.assign(document.createElement('input'), {id:key, disabled:true, value:productFValue});
+                let idLabel = Object.assign(document.createElement('label'), {innerText:'Customer id:', htmlFor:key, className:'wide'});
+                let loginLabel = document.querySelector("label[for='login']");
+                loginLabel.insertAdjacentElement("beforebegin", idLabel);
+                loginLabel.insertAdjacentElement("beforebegin", idInput);
+            }
+        }
+        let btnSave = document.querySelector('#btn-save-user');
+        btnSave.replaceWith(Object.assign(document.createElement('button'), {
+            id:'btn-save-user',
+            disabled: true,
+            innerText:'Обновить пользователя'
+        }));
+        document.querySelector('#btn-save-user').addEventListener('click', () => { saveUser('renew') });
+        setTimeout( () => checkAllValidations(), 100);
+    }
+
+    async function createRegionsSuggestions(){
+        let array = [];
+        let promise = await fetch('/shop/data/regions')
+        await promise.json().then(data => data.forEach(str => array.push(str)));
+        array.forEach(str => {
+            str = typeof str === 'string' ? str.trim() : str;
+            let opt = Object.assign(document.createElement('option'), {value:str, text: str});
+            document.querySelector('#regions').appendChild(opt);
+        })
+    }
+
+    function checkAddressInputs(){
+        let inpElems = Array.from(document.querySelectorAll('#address-form input[style="display:block"]'))
+            .filter(e => !e.disabled);
+        let correctInputsCount = 0;
+        for (let e of inpElems){
+            if (!e.value) {
+                console.log("!E.val - return !")
+                return;
+            }
+            if (e.id !== 'apartment' && e.value.match(/[а-яА-Я. ,-]+/ig)){
+                correctInputsCount++;
+            } else {
+                if (e.id === 'apartment' && e.value.match(/[\d\\/-а-яА-Я]+/ig)){
+                    correctInputsCount++;
+                }
+            }
+        }
+        document.querySelector('#btn-save-user').disabled = inpElems.length !== correctInputsCount;
+    }
+
+    async function checkLogin(target) {
+        if (!target?.value || !target.value.match(/[\w+0-9-_@$]+/ig)) {
+            showValidation(target.id, null);
+            return;
+        }
+        let response;
+        let val = target.value.match(/[\w+0-9-_@$]+/ig).toString();
+        if (val && target.value.length === val.length) {
+            let promise = await fetch('/shop/data/login/' + target.value);
+            await promise.json().then(data => response = data);
+        }
+        showValidation(target.id, response);
+    }
+
+    async function checkEmail(target) {
+        if (!target?.value || !target.value.match(/[a-zA-Z0-9\-_]+@\w+\.\w+/)){
+            showValidation(target.id, null);
+            return;
+        }
+        let response;
+        let valid;
+        let promise = await fetch('/shop/data/email/' + target.value);
+        await promise.json().then(data => response = data);
+        if (response && target.value.match(/[a-zA-Z0-9\-_]+@\w+\.\w+/)) {
+            valid = response;
+        } else {
+            valid = false;
+        }
+        showValidation(target.id, valid);
+    }
+
+    async function checkPhone(target) {
+        if (!target?.value || target.value.replace(/\D/g, '')?.length !== 12) {
+            showValidation(target.id, null);
+            return;
+        }
+        let val = target.value;
+        let res = (val.replace(/\D/g, '')?.length === 12);
+        if (res) {
+            await fetch(`/shop/data/phone/${val.replace(/\D/g, '')}`)
+                .then(promise => promise.json()).then(response => res = response);
+        }
+        showValidation(target.id, res)
+    }
+
+    async function checkDateOfBirth(target) {
+        showValidation(target.id, (target.value.replaceAll(/\D/g, '').toString().length === 8));
+    }
+
+    function showValidation(id, valid) {
+        let label = document.querySelector(`label[for="${id}"]`);
+        let text = document.querySelector(`label[for="${id}"]`).textContent;
+        text = text.substring(0, text.indexOf(':') + 1);
+        label.innerText = text + (valid ? "✔️" : "❌");
+        checkAllValidations();
+    }
+
+    function checkAllValidations() {
+        let allFormInputs = Array.from(document.querySelectorAll('#form-user input'));
+        let validCount = 0;
+        for (let input of allFormInputs) {
+            validCount += document.querySelector(`#form-user label[for="${input.id}"]`)
+                .textContent.includes('✔️') ? 1 : 0;
+        }
+        document.querySelector('#btn-save-user').disabled = validCount !== 4;
+    }
+
+    function showHideFormFields(event){
+        let delServ = document.querySelector('#deliveryService');
+        let delType = document.querySelector('#deliveryType');
+        let inputs = Array.from(document.querySelectorAll('#address-form input'));
+        inputs.forEach(i=> {
+            i.style.display = 'block';
+            document.querySelector(`label[for=${i.id}]`).style.display = 'block';
+        });
+        if(event && event.target.id === 'deliveryService') {
+            if (delServ.value === 'MistExpress') {
+                delType.children[0].selected = true;
+                delType.children[1].style.display = 'none';
+                delType.children[2].style.display = 'none';
+            } else if (delServ.value === 'Укрпочта') {
+                delType.children[0].selected = true;
+                delType.children[0].style.disolay = 'block';
+                delType.children[1].style.display = 'none';
+                delType.children[2].style.display = 'block';
+            } else {
+                for (let child of Array.from(delType.children)) {
+                    child.style.display = 'block';
+                }
+            }
+        }
+        let idToBeHidden;
+        switch (delType.value) {
+            case 'В отделение': {
+                idToBeHidden = ['street', 'apartment', 'parcelTerminal'];
+                break;
+            }
+            case 'В почтомат': {
+                idToBeHidden = ['street', 'deliveryDepartment', 'apartment'];
+                break;
+            }
+            case 'Курьером': {
+                idToBeHidden = ['deliveryDepartment', 'parcelTerminal'];
+                break;
+            }
+            default:
+                break;
+        }
+        idToBeHidden.forEach(id => {
+            document.querySelector('#' + id).style.display = 'none';
+            document.querySelector(`label[for=${id}]`).style.display = 'none';
+        });
+    }
+
+    function flipFlop(id){
+        let elem = document.getElementById(id);
+        elem.style.display = elem.style.display === 'none'? 'block':'none';
+    }
+
+    async function saveUser(altUrl){
+        let url = '/shop/api/users/' + (altUrl ? altUrl : 'new');
+        const form = new FormData();
+        let elements = Array.from(document.querySelectorAll("#form-user input, #form-user select"));
+        for (let elem of elements){
+            form.append(elem.id, elem.value ? elem.value : null);
+        }
+        let addressForm = document.querySelector('#address-form');
+        if (addressForm.style.display !== 'none'){
+            let addressElems = Array.from(document.querySelectorAll("#address-form input, #address-form select"))
+                .filter(o => o.style.display !== 'none');
+            addressElems.forEach(e => form.append(e.id, (e.value ? e.value : null)));
+        }
+        if (form.get('born')) {
+            let customer;
+            let message;
+            let pass;
+            let promise = await fetch(url, {
+                method: 'POST',
+                headers: {'contentType': 'application/json'},
+                body: form
+            }).catch(error => {
+                alert("Не все поля заполнены! " + error)
+            });
+            if (promise.ok) {
+                await promise.json().then(response => {
+                    pass = response['pass']
+                    message = response['message'];
+                    customer = response['customer'];
+                });
+                console.log("Wait Response: " + JSON.stringify(customer));
+                console.log("Response: " + message);
+                setTimeout(() =>{ window.location.href=`/shop/api/users/page/${customer.id.trim()}` }, 100);
+            }
+            // if (customer){
+            //     fillFieldsWithExistValues( customer );
+            //     Object.assign(document.getElementById('genPass'), {hidden:false, innerText:pass});
+            //     Object.assign(document.getElementById('message'), {hidden:false, innerText:message});
+            //     setTimeout(() => {document.getElementById('message').hidden = true}, 5000);
+            // }
+        } else {
+            return;
+        }
+    }
+
+    function showHidePassInput(){
+        let passInput = document.querySelector('#pass');
+        let passLabel = document.querySelector("label[for='pass']");
+        let displayValue = passInput.style.display === 'none' ? 'block' : 'none';
+        passInput.style.display = displayValue;
+        passLabel.style.display = displayValue;
+    }
+
+</script>
+</body>
+</html>

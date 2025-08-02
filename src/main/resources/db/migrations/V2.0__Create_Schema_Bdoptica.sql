@@ -1,0 +1,5 @@
+CREATE SCHEMA IF NOT EXISTS bdoptica;
+
+-- ALTER SCHEMA bdoptica OWNER TO "Admin";
+
+-- DROP SCHEMA IF EXISTS public CASCADE;

@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <th:block th:insert="~{fragments/commons :: head}"></th:block>
+  <title>Изменение заказа</title>
+  <style>
+    #insertable{
+      justify-items: center;
+      overflow: scroll;
+    }
+
+    th, td{
+      padding: 5px 5px 5px 5px;
+      border: 1px solid;
+    }
+
+    .ol-act{
+      font-size: min(10px, max(16px, 1vw));
+      width: 10vw;
+      min-width: 70px;
+      max-width: 150px;
+    }
+
+    .cr-info {
+      width: 20vw;
+      min-width: 100px;
+      max-width: 150px;
+    }
+
+    .f-n{
+      font-size: x-small;
+      font-weight: bold;
+    }
+
+    .f-v, .olTotal {
+      font-size: small;
+    }
+
+    .f-v, .olTotal, .ol-address {
+      font-style: italic;
+      font-family: monospace;
+      font-weight: bold;
+    }
+
+    .amount{
+      width: 20px;
+      height: 11px;
+    }
+
+    .incr, .decr{
+      font-size: 12px;
+      width: 20px;
+      height: 17px;
+    }
+
+    #addProduct{
+      border: 2px solid gold;
+      box-shadow: 1px 1px 1px 0 black;
+      font-size: larger;
+      border-radius: 3px;
+    }
+
+    #addProduct:hover{
+      border: 2px solid white;
+      background-color: gold;
+      box-shadow: 2px 2px 2px 1px black;
+      font-size: larger;
+    }
+
+
+    .order-table{
+      margin: 0 0 0 20px;
+    }
+
+    .constr-prod{
+      border: 1px double #a9c2e3;
+    }
+    .constr{
+      padding: 2px 2px 0 2px;
+      margin-block-end: 5px;
+      border: 2px double deepskyblue;
+      border-radius: 3px;
+    }
+    .const-header{
+      font-size: 16px;
+      background-image: linear-gradient(0deg, lightblue, white 45%, lightskyblue);
+      margin: 5px 0 5px 0;
+      border-radius: 3px;
+    }
+
+    .ol-name{
+      font-size: medium;
+      background-color: antiquewhite;
+      padding: 0 3px 0 3px;
+      border-radius: 4px;
+    }
+
+    .col-user{
+      width: 20vw;
+      min-height: 100px;
+      max-height: 180px;
+    }
+    .col-goods{
+      width: 20vw;
+      min-width: 100px;
+      max-width: 180px;
+    }
+    .oTotal{
+      width: 20vw;
+      min-width: 80px;
+      max-width: 180px;
+    }
+    .col-price{
+      min-width: 100px;
+    }
+    .prod-rm-btn{
+      background-image: linear-gradient(346deg, #f6ab8d, #fcfcfc 50%, #ffdacc);
+      font-size: xx-small;
+      border-radius: 3px;
+    }
+    .prod-rm-btn:hover{
+      color: black;
+      font-weight: bold;
+      background-image: linear-gradient(356deg, #f85312, #F1E5E6 50%, #f64505);
+    }
+  </style>
+</head>
+<body>
+
+<th:block th:insert="~{fragments/commons :: nav-bar}"></th:block>
+<th:block th:insert="~{fragments/commons :: side-bar}"></th:block>
+
+<div class="main-field" id="mainField">
+  <div id="spare-insertable"></div>
+  <div id="insertable">
+    <table id="ordersTable" class="order-table">
+      <thead>
+      <tr>
+        <td>Код заказа</td>
+        <td>Заказчик</td>
+        <td>Товар</td>
+        <td>всего</td>
+        <td>Статус</td>
+        <td>Изменить</td>
+      </tr>
+      </thead>
+      <tbody class="main-table">
+
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<th:block th:insert="~{fragments/commons :: modal-address-form}"></th:block>
+<th:block th:insert="~{fragments/commons :: amount-control-script}"></th:block>
+<th:block th:insert="~{fragments/commons :: home-btn-and-service-script}"></th:block>
+
+<script data-th-inline="javascript">
+  const originalOrder = [[ ${order} ]];
+  let originalCustomer = originalOrder.customer;
+  let originalDeliveryAddress = originalOrder.address;
+  let originalOrderLines = originalOrder.orderLines;
+  let originalOrderConstructors = originalOrder.constructors;
+  let originalStatus = originalOrder.status.trim();
+</script>
+
+<script>
+
+  let updatedOrder = originalOrder;
+  let changedCustomer;
+  let changedDeliveryAddress = originalDeliveryAddress;
+  let changedOrderStatus = originalStatus ? originalStatus  : null;
+  let changedOrderLines;
+  let newOrderLines = [];
+  let changedConstructors = [];
+
+
+
+  window.onload = () => {
+    loadMainFunctions();
+    if(storage.getItem('allProducts')){
+      allProducts = JSON.parse(storage.getItem('allProducts'));
+    }
+    initChangedOLs();
+    el('#menu-btn').addEventListener('click', () => activateMenuListener('spare-insertable', false));
+    if (el('staticStatus')){
+      el('staticStatus').innerText = enumsRu[el('staticStatus').textContent.trim()]
+              ? enumsRu[el('staticStatus').textContent.trim()]
+              : el('staticStatus').textContent.trim()
+    }
+    document.querySelector('.main-table').innerHTML = generateTableBody();
+  }
+
+  function initChangedOLs(){
+      if (originalOrderLines){
+        changedOrderLines = originalOrderLines;
+      }
+      if (originalOrderConstructors){
+        changedConstructors = originalOrderConstructors;
+      }
+  }
+
+  function generateTableBody(){
+    let roles = userAuth.map(role => role.authority);
+    let order = originalOrder;
+    let customer = order.customer;
+    let ols = order.orderLines;
+    let consts = order.constructors;
+    return  `
+      <tr>
+        <td><span class="xsm">Код: </span><span class="sm">${order.id.trim()}</span></td>
+        <td class="col-user">
+            <span class="xsm">Id заказчика: </span><br><span class="sm">${customer.id.trim()}</span><br><hr>
+            <span class="xsm">Логин: </span><br><span class="sm">${customer.user.login.trim()}</span><br><hr>
+            <span class="xsm">ФИО: </span><br><span class="sm">${customer.lname.trim() + ' ' + customer.fname.trim() + ' ' + customer.fatherName.trim()}</span><br><hr>
+            <span class="xsm">Тел.: </span><br><span class="sm">${customer.contact.phone.trim()}</span><br><hr>
+            <span class="xsm">Email: </span><br><span class="sm">${customer.contact.email}</span><br><hr>
+            <span class="xsm">Адресс доставки: </span><br><hr>
+            <span class="sm ol-address">${order.address ? order.address : 'Адресс не указан!'}</span>
+            <br><br>
+          <button type="button" id="changeAddress" onclick="openAddressForm()">
+            Изменить адресс
+          </button>
+          <br>
+          <hr>
+          ${roles.includes('ROLE_STAFF') || roles.includes('ROLE_SYSADMIN') ? '<button type="button" id="showModal" onclick="showHideModal(event)">' +
+            'Изменить заказчика' +
+          '</button>' : '' }
+        </td>
+        <td class="col-goods">
+            ${generateConstructorLines(consts)}
+            ${generateOrderLines(ols, consts.length)}
+            <hr>
+            <button type="button" onclick="el('#menu-btn').click()" style="font-size: medium;" id="addProduct">Добавить продукт</button>
+            <br>
+        </td>
+        <td class="col-price">
+            <span class="oTotal">${calculateOrderFinale(order.constructors, order.orderLines)}</span> ₴
+        </td>
+        <td>
+          <label>Статус заказа:</label><br>
+          ${roles.includes('ROLE_USER') && !roles.includes('ROLE_SYSADMIN')
+              ? '<span id="staticStatus">' + (enumsRu[order.status.trim()]
+                  ? enumsRu[order.status.trim()] : order.status.trim()) + '</span>' : ''}
+          ${roles.includes('ROLE_STAFF') || roles.includes('ROLE_SYSADMIN')
+              ? '<select id="orderStatus" value="' + order.status.trim() + '" ' +
+                'onselect="changedOrderStatus = this.value" onchange="changedOrderStatus = this.value">' +
+                  '<option value="ACCEPTED">Принят</option>' +
+                  '<option value="PROCESSING">Обрабатываеться</option>' +
+                  '<option value="CONFIRMED">Подтвержден</option>' +
+                  '<option value="SENT">Отправлен</option>' +
+                  '<option value="DELIVERED">Доставлен</option>' +
+                  '<option value="CANCELED">Отменен</option>' +
+                '</select>' : ''}
+        </td>
+        <td>
+          <button class="ol-act" type="button" onclick="updateOrder()">Обновить</button>
+        </td>
+      </tr>`;
+
+  }
+
+  function generateOrderLines(oLines, rowNumber){
+    let text = '';
+    for (let ol of oLines){
+      rowNumber++;
+      text += `
+        <div class="constr" id="${rowNumber}">
+            <u class="const-header">
+                  ${enumsRu[ol.product.nomination.trim()] ? enumsRu[ol.product.nomination.trim()] : ol.product.nomination.trim()}
+            </u>
+            <input style="display: none;" name="id" value="${ol.product.id.trim()}">
+            <div class="xsm">Код:
+                <span class="sm">${ol.product.id.trim()}</span>
+            </div>
+            <div class="xsm">Брэнд:
+                <span class="sm">${ol.product.brand.trim()}</span>
+            </div>
+          ${ol.product?.model != null ?
+            '<div>' +
+              '<span class="xsm">Модель: </span>' +
+              '<span class="sm">' + ol.product.model.trim() + '</span>'+
+            '</div>' : ''}
+          ${ol.product?.frameType != null ?
+            '<div>' +
+              '<span class="xsm">Тип оправы: </span>' +
+              '<span class="sm">' +(enumsRu[ol.product.frameType.trim()] ? enumsRu[ol.product.frameType.trim()] : ol.product.frameType.trim())+ '</span>' +
+            '</div>'  : ''}
+          ${ol.product?.frameSize != null ?
+            '<div>' +
+              '<span class="xsm">Размер: </span>' +
+              '<span class="sm">' + (enumsRu[ol.product.frameSize.trim()] ? enumsRu[ol.product.frameSize.trim()] : ol.product.frameSize.trim()) + '</span>' +
+            '</div>' : ''}
+          ${ol.product?.gender != null ?
+            '<div>' +
+              '<span class="xsm">Пол: </span>' +
+              '<span class="sm">' + (enumsRu[ol.product.gender.trim()] ? enumsRu[ol.product.gender.trim()] : ol.product.gender.trim()) + '</span>' +
+            '</div>' : '' }
+          ${ol.product?.lensType != null ?
+            '<div>' +
+              '<span class="xsm">Тип линзы: </span>' +
+              '<span class="sm">' + (enumsRu[ol.product.lensType.trim()] ? enumsRu[ol.product.lensType.trim()] : ol.product.lensType.trim()) + '</span>' +
+            '</div>' : '' }
+          ${ol.product?.sp != null ?
+            '<div>' +
+              '<span class="xsm">Sp (сфера): </span>' +
+              '<span class="sm">' + ol.product.sp.trim() + '</span>' +
+            '</div>' : ''}
+          ${ol.product?.cyl != null ?
+            '<div>' +
+              '<span class="xsm">Cyl. (цылиндр): </span>' +
+              '<span class="sm">' + ol.product.cyl.trim() + '</span>' +
+            '</div>' : ''}
+          ${ol.product?.distance != null ?
+            '<div>' +
+              '<span class="xsm">Расстояние: </span>' +
+              '<span class="sm">' + ol.product.distance + ' мм</span>' +
+            '</div>' : ''}
+            <hr>
+          <div class="xsm">
+              Заказано
+              <span style="display: inline-flex; flex-wrap: nowrap;">
+                <button type="button" class="decr" onclick="changeProductAmount(this)">-</button>
+                <input class="amount" value="${ol.quantity}" onchange="changePTotal(this)">
+                <button type="button" class="incr" onclick="changeProductAmount(this)">+</button>
+              </span>
+              <span class="xsm">шт. на</span>
+              <span class="sm olTotal">${calculateOLFinale(ol)}</span> ₴
+          </div>
+          <div class="xsm">По <span class="sm olPrice">${ol.price.trim()}</span> ₴.</div>
+          <br>
+          <button type="button" onclick="removeProduct(this)" class="prod-rm-btn">Удалить из заказа</button>
+          <hr>
+      </div>
+      `;
+    }
+    return text;
+  }
+
+  function generateConstructorLines(consts){
+    let text = '';
+    let rowNumber = 0;
+    for (let cOL of consts){
+      rowNumber++;
+      text += `
+            <div id="${rowNumber}" class="constr"><u class="const-header">Конструктор:</u>
+                <input style="display: none;" name="id" value="${cOL.constructor.id.trim()}">
+                <div name="frame" class="constr-prod"><u class="ol-name">Оправа:</u>
+                    <div class="xsm">Код: <span class="sm">${cOL.constructor.frame.id}</span></div>
+                    <div class="xsm">Брэнд: <span class="sm">${cOL.constructor.frame.brand}</span></div>
+                    <div class="xsm">Модель: <span class="sm">${cOL.constructor.frame.model}</span></div>
+                </div>
+                <div name="odLens" class="constr-prod"><u class="ol-name">Правая линза:</u>
+                      <div class="xsm">Код: <span class="sm">${cOL.constructor.odLens.brand}</span></div>
+                      <div class="xsm">Сфера: <span class="sm">${cOL.constructor.odLens.sp}</span></div>
+                       <div class="xsm">Цылиндр: <span class="sm">${cOL.constructor.odLens.cyl}</span></div>
+                      ${cOL.constructor.odCylAngle != null ? '<div class="xsm">Угол: <span class="sm">' + cOL.constructor.odCylAngle + '&deg;</span></div>' : ''}
+                </div>
+                <div name="osLens" class="constr-prod"><u class="ol-name">Левая линза:</u>
+                    <div class="xsm">Код: <span class="sm">${cOL.constructor.osLens.brand}</span></div>
+                    <div class="xsm">Сфера: <span class="sm">${cOL.constructor.osLens.sp}</span></div>
+                    <div class="xsm">Цылиндр: <span class="sm">${cOL.constructor.osLens.cyl}</span></div>
+                    ${cOL.constructor.osCylAngle != null ? '<div class="xsm">Угол: <span class="sm">' + cOL.constructor.osCylAngle + '&deg;</span></div>' : '' }
+                </div>
+              ${cOL.constructor.distance != null ? '<div class="xsm">Расстояние: <span class="sm">' + cOL.constructor.distance + '</span> мм.</div><hr>' : ''}
+              <div class="xsm">Заказано
+                <span style="display: inline-flex; flex-wrap: nowrap;">
+                  <button type="button" class="decr" onclick="changeProductAmount(this)">-</button>
+                  <input class="amount" value="${cOL.quantity}" onchange="changePTotal(this)">
+                  <button type="button" class="incr" onclick="changeProductAmount(this)">+</button>
+                </span> шт. на <span class="sm olTotal">${calculateOLFinale(cOL.constructor)}</span> ₴</div>
+              <div class="xsm">По <span class="sm olPrice">${cOL.price}</span> ₴</div>
+              <br>
+              <button type="button" onclick="removeProduct(this)" class="prod-rm-btn">Удалить из заказа</button>
+              <hr>
+            </div>`;
+    }
+    return text;
+  }
+
+  function toOneRowAddress(address){
+    if (address) {
+      console.log('ToInlineAddress()!!');
+      let inline = '';
+      for (let [k, v] of Object.entries(address)) {
+        if (k !== 'id') {
+          inline += v ? (fieldNamesRu[k] ? fieldNamesRu[k] : k) + ': ' + v.trim() + '. ' : '';
+        }
+      }
+      return inline;
+    } else {
+      return 'Адрес не установлен!';
+    }
+  }
+
+  function calculateOLFinale(obj){
+    let price = +obj.price.match(/\d+/).toString();;
+    let quantity = +obj.quantity.trim();
+    let total = price * quantity + ',00';
+    console.log(`OL price: ${price}, quantity: ${quantity}. Total: ${total}`);
+    return total;
+  }
+
+  function calculateOrderFinale(constructors, oLines){
+    let prices = constructors.concat(oLines).map(c => {
+      let price = +c.price.match(/\d+/).toString();
+      let quantity = +c.quantity.trim();
+      return price * quantity;
+    });
+    console.log('Prices1: ' + prices);
+    let total = 0;
+    for (let price of prices){
+      total += price;
+    }
+    console.log('Order Final : ' + total);
+    return total + ",00";
+  }
+
+  function changePTotal(target){
+    console.log('ChangePTotal()')
+    let product = target.closest('.constr');
+    if (product){
+      let spanPrice = product.querySelector('.olPrice').textContent.match(/\d+/).toString();
+      console.log('OL price: ' + spanPrice);
+      product.querySelector('.olTotal').innerHTML = (+spanPrice * target.value) + ',00';
+      console.log('OL total: ' + product.querySelector('.olTotal').textContent);
+    }
+  }
+
+  function changeOTotal(){
+    const productDivs = Array.from(document.querySelectorAll('.constr'));
+    let total = 0;
+    for (let product of productDivs){
+      let amount = product.querySelector('.amount').value;
+      let price = +(product.querySelector('.olPrice').textContent.match(/\d+/).toString());
+      total += amount * price;
+    }
+    document.querySelector('.oTotal').innerHTML = total + ",00";
+  }
+
+  function changeProductAmount(target){
+    console.log('ChangeProductAmount()!');
+    let amountElem;
+    if(target.innerText === '-'){
+      amountElem = target.nextElementSibling
+      amountElem.value = +amountElem.value > 1 ? +amountElem.value - 1 : +amountElem.value;
+    } else {
+      amountElem = target.previousElementSibling;
+      amountElem.value = +amountElem.value + 1;
+    }
+    if(!changedConstructors){
+      changedConstructors = originalOrderConstructors;
+    }
+    changePTotal(amountElem);
+    changeOTotal();
+    let productId = target.closest('.constr').children[1].value;
+    let result;
+    if (changedOrderLines && changedOrderLines?.find(ol => ol.product.id.trim() === productId.trim())){
+      changedOrderLines = changedOrderLines.map(ol => {
+        if(ol.product.id.trim() === productId.trim()){
+          ol.quantity = +amountElem.value;
+        }
+        return ol;
+      });
+    } else if (newOrderLines && newOrderLines?.find(ol => ol.productId === productId)){
+      newOrderLines = newOrderLines.map(ol => {
+        if(ol.productId === productId){
+          ol.amount = +amountElem.value;
+        }
+        return ol;
+      });
+    } else if (changedConstructors && changedConstructors?.find(cOL => cOL.constructor.id.trim() === productId)) {
+      changedConstructors = changedConstructors.map(ol => {
+        if(ol.constructor.id.trim() === productId.trim()) {
+          ol.quantity = +amountElem.value;
+          ol.constructor.quantity = +amountElem.value;
+        }
+        return ol;
+      })
+    } else {
+      changedOrderLines = originalOrderLines.map(ol => {
+        if( ol.product.id.trim() === productId){
+          result = ol;
+          ol.quantity = +amountElem.value
+        }
+        return ol;
+      });
+    }
+  }
+
+  function removeProduct(target){
+    let productId = Array.from(target.parentElement.children)[1].value;
+    target.parentElement.remove();
+    let orderLine = changedOrderLines.concat(changedConstructors).concat(newOrderLines).find(obj => {
+              if (obj.product){
+                return obj.product.id.trim() === productId;
+              } else if (obj.productId){
+                return obj.productId.trim() === productId;
+              } else {
+                return obj.constructor.id.trim() === productId;
+              }
+            });
+    if(orderLine.product) {
+      changedOrderLines.splice(changedOrderLines.indexOf(orderLine), 1);
+    } else if (orderLine.constructor){
+      changedConstructors.splice(changedConstructors.indexOf(orderLine), 1);
+    } else {
+      newOrderLines.splice(newOrderLines.indexOf(orderLine), 1);
+    }
+  }
+
+  function changeOrderCustomer(){
+    changeCustomer();
+    displayNewCustomer();
+  }
+
+  async function changeCustomer(){
+    let customerIdElem = document.querySelector('#orderCustomerId');
+    let promise = await fetch('/shop/api/users/customer/' + customerIdElem.value)
+    await promise.json().then(customer => changedCustomer = customer)
+          .catch(e => { console.warn("Customer not found! " + e) });
+    if (changedCustomer !== originalCustomer){
+      displayNewCustomer();
+    }
+  }
+
+  function displayNewCustomer(){
+    console.log("DisplayNewCustomer() active!");
+    let customer = changedCustomer;
+    document.querySelector('.cr-info').innerHTML =
+            `<span class="f-n">Id пользователя:   </span><br><span class="f-v">${customer.id}</span><br><hr>
+            <span class="f-n">Логин:  </span><br><span class="f-v">${customer.user.login}</span><br><hr>
+            <span class="f-n">ФИО:    </span><br><span class="f-v">${customer.lname + " " + customer.fname + " " + customer.fatherName}</span><br><hr>
+            <span class="f-n">Тел:    </span><br><span class="f-v">${customer.contact.phone}</span><br><hr>
+            <span class="f-n">Email:  </span><br><span class="f-v">${customer.contact.email}</span><br><hr>
+            <span class="f-n">Адресс доставки: </span><br><span class="ol-address" style="font-size: small; max-width: 250px;">${toOneRowAddress( customer.address )}</span><br><hr>
+            <button type="button" id="showModal" onclick="showHideModal(event)">Изменить заказчика</button>`;
+  }
+
+  async function updateOrder(){
+    updatedOrder.customer = changedCustomer ? changedCustomer : originalCustomer;
+    changedOrderLines.forEach(ol => ol.product.pictures = null);
+    updatedOrder.orderLines = changedOrderLines;
+    updatedOrder.constructors = changedConstructors;
+    updatedOrder.status = changedOrderStatus;
+    updatedOrder.address = changedDeliveryAddress;
+    console.log("On save order is: " + JSON.stringify(updatedOrder));
+    let form = new FormData();
+    form.append('order', JSON.stringify(updatedOrder));
+    form.append('orderLines[]', JSON.stringify(newOrderLines));
+    form.append('constructors[]', JSON.stringify(changedConstructors));
+    try {
+      const response = await fetch('/shop/orders/renew', {
+        method: 'PUT',
+        headers: {'contentType': 'application/json'},
+        body: form
+      });
+      if (response.ok) {
+        window.location.href = '/shop/orders/by-user-id/' + updatedOrder.customer.id;
+      }
+    } catch (error) {
+      console.error('Fetch error: ', error);
+    }
+  }
+
+  function setNewDeliveryAddress(){
+    let addressFields = Array.from(document.querySelectorAll('#container-two select, #container-two input'))
+            .filter(e => e.style.display !== 'none');
+    let finalAddress = '';
+    for (let e of addressFields){
+      if (e.value) {
+        finalAddress += (fieldNamesRu[e.id] ? fieldNamesRu[e.id] : e.id) + ': ' + e.value
+            + (addressFields.indexOf(e) < (addressFields.length - 1) ? ', ' : '. ');
+      }
+    }
+    changedDeliveryAddress = finalAddress;
+    document.querySelector('.ol-address').innerText = changedDeliveryAddress;
+    document.querySelector('.modal-address').style.display = 'none';
+  }
+
+  function toInlineAddress(address){
+    let inline = '';
+    let keys = Object.keys(address);
+    for (let key of keys){
+      if (address[key] && key !== 'id'){
+        let striped = typeof address[key] == 'string' ? address[key].trim() : address[key];
+        inline += (fieldNamesRu[key] ? fieldNamesRu[key] : key) + ": "
+                + (enumsRu[striped] ? enumsRu[striped] : striped)
+                + (keys.indexOf(key) < keys.length - 1 ? ", " : ".");
+      }
+    }
+    return inline ? inline :
+            `Адресс отсуцтвует!<br>
+            <button type="button" onclick="setNewDeliveryAddress()">Ввести адресс</button>`;
+  }
+
+  function addProduct(event){
+    let id = event.target.id;
+    let rowNumber = Array.from(document.querySelectorAll('.constr')).length;
+    const predicate = (ol) => (ol?.product ? ol?.product.id.trim() : ol.productId.trim()) === id;
+    const newProduct = allProducts.find(p => p.id.trim() === id);
+    if (!newOrderLines.find(predicate) && !changedOrderLines.find(predicate)) {
+      console.log("!newOrderLines.find(predicate) && !changedOrderLines.find(predicate)!")
+      let olProductDiv = create('div', {id: rowNumber, className: 'constr'});
+      const olHtml = `
+            <input style="display: none;" name="id" value="${newProduct.id.trim()}">
+            <u class="const-header">
+                ${enumsRu[newProduct.nomination.trim()] ? enumsRu[newProduct.nomination.trim()] : newProduct.nomination.trim()}
+            </u>
+            <div class="xsm">Название:
+              <span class="sm">${enumsRu[newProduct.nomination.trim()] ? enumsRu[newProduct.nomination.trim()] : newProduct.nomination.trim()}</span>
+            </div>
+            <div class="
+            xsm">Производитель:
+              <span class="sm"> ${newProduct.brand.trim()}</span>
+            </div>
+            ${newProduct.model ? '<div newProduct.model>' +
+              '<span class="xsm">Модель: </span>' +
+              '<span class="sm">' + newProduct.model.trim() + '</span>' +
+            '</div>' :''}
+            ${newProduct.frameType ? '<div>' +
+              '<span class="xsm">Тип оправы: </span>' +
+              '<span class="sm">' + (enumsRu[newProduct.frameType.trim()] ? enumsRu[newProduct.frameType.trim()] : newProduct.frameType.trim()) + '</span>' +
+            '</div>' : ''}
+            ${newProduct.frameSize ? '<div>' +
+              '<span class="xsm">Размер: </span>' +
+              '<span class="sm">' + (enumsRu[newProduct.frameSize.trim()] ? enumsRu[newProduct.frameSize.trim()] : newProduct.frameSize.trim()) + '</span>' +
+            '</div>' : ''}
+            ${newProduct?.gender ? '<div>' +
+              '<span class="xsm">Пол: </span>' +
+              '<span class="sm">' + (enumsRu[newProduct.gender.trim()] ? enumsRu[newProduct.gender.trim()] : newProduct.gender.trim()) + '</span>' +
+            '</div>' : ''}
+            ${newProduct.lensType ? '<div>' +
+              '<span class="xsm">Тип линзы: </span>' +
+              '<span class="sm">' + (enumsRu[newProduct.lensType.trim()] ? enumsRu[newProduct.lensType.trim()] : newProduct.lensType.trim()) + '</span>' +
+            '</div>' : ''}
+            ${newProduct.sp ? '<div>' +
+              '<span class="xsm">Сфера: </span>' +
+              '<span class="sm">' + newProduct.sp + '</span>' +
+            '</div>' : ''}
+            ${newProduct.cyl ? '<div>' +
+              '<span class="xsm">Цылиндр: </span>' +
+              '<span class="sm">' + newProduct.cyl + '</span>' +
+            '</div>' : ''}
+            ${newProduct.distance ? '<div>' +
+              '<span class="xsm">Расстояние: </span>' +
+              '<span class=sm">' + newProduct.distance + ' мм</span>' +
+            '</div>' : '' }
+            <div>
+              <span class="xsm">Цена: </span>
+              <span class="olPrice" style="font-size: small;">${newProduct.price}</span> ₴
+            </div>
+            <div>
+              <label class="xsm">Заказано
+                <div style="display: inline-flex; flex-wrap: nowrap;">
+                  <button type="button" class="decr" onclick="changeProductAmount(this)">-</button>
+                  <input class="amount" value="1" onchange="changePTotal(this)">
+                  <button type="button" class="incr" onclick="changeProductAmount(this)">+</button>
+                </div>
+                <span class="xsm">шт. на</span>
+                <span class="sm olTotal">${newProduct.price}</span> ₴
+              </label>
+              <br>
+              <span class="f-n"> на</span>
+              <span class="sm olPrice">${newProduct.price}</span> ₴
+            </div>
+            <br>
+            <button type="button" onclick="removeProduct(this)" class="prod-rm-btn">Удалить из заказа</button>
+            <hr>`;
+      olProductDiv.innerHTML = olHtml;
+      document.querySelector('#addProduct').insertAdjacentElement('beforebegin', olProductDiv);
+      let ol = {
+        productId: id,
+        amount: 1,
+      }
+      newOrderLines.push(ol);
+    } else {
+      let array = newOrderLines.find(predicate) ? newOrderLines : changedOrderLines;
+      let field = newOrderLines.find(predicate) ? 'amount' : 'quantity';
+      console.log('Array is ' + array === newOrderLines ? 'newOrderLines' : array === changedOrderLines ? 'changedOrderLines' : '!! No Such array !!')
+      array.forEach(ol => {
+        let pId = ol?.product.id ? ol.product.id.trim() : ol?.productId ? ol.productId.trim() : null;
+        if (pId && pId === id) {
+          ol[field] = +ol[field] + 1;
+          let inp = document.querySelector(`#${id} .amount`);
+          inp.value = +ol[field];
+          console.log('Input amount: ' + inp.value + ' ' + inp.nodeName);
+        }
+      });
+    }
+    console.log("After newOL added: " + JSON.stringify(newOrderLines));
+  }
+
+  function openAddressForm(){
+    document.querySelector('.modal-address').style.display = 'grid';
+    document.querySelector('.modal-address').addEventListener('change', checkFieldsFilled);
+    showHideFormFields();
+  }
+</script>
+
+</body>
+</html>

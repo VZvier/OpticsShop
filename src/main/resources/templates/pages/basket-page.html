@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <th:block th:insert="~{fragments/commons :: head}"></th:block>
+    <title>Basket</title>
+    <style>
+        #insertable {
+            justify-items: center;
+            overflow: scroll;
+            scrollbar-width: none;
+        }
+
+        .amount-control {
+            display: inline-flex;
+            width: 100px;
+            height: 16px;
+            white-space: unset;
+            flex-wrap: wrap;
+            justify-items: center;
+        }
+
+        .amount-control input {
+            border-left: 0;
+            border-right: 0;
+            margin-left: 0;
+            margin-right: 0;
+            text-align: center;
+            width: 32px;
+        }
+
+        table, td, th {
+            border: 1px solid wheat;
+        }
+
+        .createOrder {
+            height: 20px;
+        }
+
+        .existedAddress {
+            position: relative;
+            height: 70px;
+            border: 4px green;
+            padding: 10px 10px 15px 15px;
+            border-radius: 4px;
+            background-color: lightgreen;
+            box-shadow: 2px 2px 5px black;
+            text-align: center;
+            font-size: 14px;
+            margin-block-end: 10px;
+            justify-self: center;
+        }
+
+        #changeAddress {
+            position: absolute;
+            bottom: 10px;
+            right: 2vw;
+            padding: 5px 5px 5px 5px;
+        }
+
+        table, td, th {
+            box-shadow: 1px 2px 5px black;
+        }
+
+        #clearBasket, #clearBasket:active{
+            position: absolute;
+            left: -44px;
+            top: 40px;
+            justify-self: center;
+            border: 3px double gold;
+            background-color: red;
+            color: white;
+            font-size: x-small;
+            border-radius: 3px;
+            box-shadow: 1px 1px 1px 1px black;
+        }
+
+        #clearBasket:hover{
+            background-color: orangered;
+            box-shadow: 2px 2px 2px 3px black;
+        }
+
+        .sub-table {
+            width: 29vw;
+            font-size: x-small;
+            margin: 5px 0 5px 0;
+        }
+
+        #changeAddress{
+            color: blue;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+<th:block th:insert="~{fragments/commons :: nav-bar}"></th:block>
+<th:block th:insert="~{fragments/commons :: side-bar}"></th:block>
+
+
+
+<div class="main-field" id="mainField">
+    <div class="sp-ins" id="spare-insertable" style="display: none;"></div>
+    <div id="insertable"></div>
+    <button type="button" id="toOrdered" style="display: none;"></button>
+</div>
+
+<th:block th:insert="~{fragments/commons :: home-btn-and-service-script}"></th:block>
+<th:block th:insert="~{fragments/commons :: amount-control-script}"></th:block>
+<th:block th:insert="~{fragments/commons :: modal-address-form}"></th:block>
+
+<script>
+    let products = [];
+    let deliveryAddress;
+
+    window.onload = () => {
+        loadMainFunctions();
+        if(storage.getItem('allProducts')){
+            allProducts = JSON.parse(storage.getItem('allProducts'));
+        }
+        loadOrdered();
+        document.querySelector('.basket').hidden = true;
+        getAddress()
+        setTimeout(() => {
+            if(deliveryAddress) {
+                console.log('Address != null & != "" ! delAddress: ' + deliveryAddress);
+                showAddress(deliveryAddress);
+            }
+        }, 300);
+        document.querySelector('#menu-btn').addEventListener('click', () => activateMenuListener('spare-insertable', false));
+    }
+
+    function showClearBasketBtn(){
+        let clearBasketBtn = document.querySelector('#clearBasket');
+        if (clearBasketBtn) {
+            if (![null, undefined, 'null', 'undefined', '[]'].includes(storage.getItem('orderLines'))) {
+                clearBasketBtn.style.display = 'block';
+            }
+            if (![null, undefined, 'null', 'undefined', '[]'].includes(storage.getItem('constructors'))) {
+                clearBasketBtn.style.display = 'block';
+            }
+        }
+    }
+
+    function clearBasket(){
+        let response = confirm("Вы действительно хотите очистить корзану?")
+        if (response) {
+            storage.removeItem('orderLines');
+            storage.removeItem('constructors');
+            window.location.reload();
+        }
+    }
+
+    async function loadOrdered() {
+        if (!['null', 'undefined', null].includes(storage.getItem('orderLines'))) {
+            orderLines = JSON.parse(storage.getItem('orderLines'));
+        }
+        if (!['null', 'undefined', null].includes(storage.getItem('constructors'))) {
+            constructors = JSON.parse(storage.getItem('constructors'));
+        }
+        if (orderLines && orderLines?.length > 0) {
+            products = orderLines.map(ol => allProducts.find(p => p.id.trim() === ol.productId.trim()));
+            makeTableBody();
+            changeOrderTotal();
+        } else {
+            makeTableBody();
+        }
+    }
+
+    function makeTableBody() {
+        console.log("ShowOLs()");
+        let thead = `
+                <thead>
+                    <tr>
+                        <td style="width: 45vw; text-align: center" colspan="2">Информация о продукте</td>
+                        <td style="width: 15vw; text-align: center">Цена</td>
+                        <td style="width: 15vw; text-align: center">Количество</td80px>
+                        <td style="width: 15vw; text-align: center">Сумма</td>
+                        <td style="width: 15vw; text-align: center">Действия</td>
+                    </tr>
+                </thead>`;
+        let body = '';
+        let counter = 0;
+        if ((constructors && constructors.length > 0) || (orderLines && orderLines.length > 0)) {
+            if (constructors && constructors?.length > 0) {
+                console.log('Constructors: ' + constructors.length);
+                constructors.forEach(c => {
+                    counter++;
+                    let ids = [c.frame, c.odLens, c.osLens];
+                    let constructorProducts = [];
+                    for (let id of ids) {
+                        constructorProducts.push(allProducts.find(p => p.id.includes(id)));
+                    }
+                    console.log('Const goods: ' + constructorProducts.length);
+                    body += createConstructorOLForTable(constructorProducts, c, counter);
+                });
+            }
+            if (orderLines && orderLines?.length > 0) {
+                orderLines.forEach(ol => {
+                    counter++;
+                    let product = products.find(p => p.id.trim() === ol.productId);
+                    body += createProductOLForTable(product, ol.amount, counter);
+                });
+            }
+            body += `<tr>
+                        <td colspan="4" id="totalName">Цена заказа: </td>
+                        <td style="text-align: center;" id="orderTotal"></td>
+                        <td style="position:relative; text-align: center;" id="ordering">
+                            <button type="button" class="createOrder" onclick="saveOrder()">Заказать</button>
+                            <button style="display: none;" id="clearBasket" onclick="clearBasket()">Очистить корзину</button>
+                        </td>
+                     </tr>`;
+            el('insertable').innerHTML =
+                `<table style="width: 90vw;">${thead}<tbody>${body}</tbody</table>`;
+
+            changeOrderTotal();
+            showClearBasketBtn();
+        } else {
+            el('insertable').innerHTML = `<table style="width: 90vw;">${thead}<tbody>
+                <tr><td colspan="6" style="text-align: center; background-color: red; color: white; font-size: 18px;">Строки заказа отсуцтвуют!<br>Корзина пуста!</td></tr></tbody</table>`;
+        }
+    }
+
+    function getAddress() {
+        const xhr = new XMLHttpRequest();
+        xhr.open('get', '/shop/api/users/address');
+        xhr.send();
+        xhr.onreadystatechange = () => {
+            if (xhr.readyState === 4 && xhr.status === 200) {
+                deliveryAddress = xhr.response;
+            }
+        }
+    }
+
+    function showAddress(){
+        if (!deliveryAddress) return;
+        if(document.querySelector('.existedAddress')){
+            document.querySelector('.existedAddress').remove();
+        }
+        let title = Object.assign(document.createElement('div'), {style:'font-size:16px', innerText:'АДРЕСС ДОСТАВКИ'});
+        let changeAddress =  Object.assign(document.createElement('u'), {innerText:'Изменить', id:'changeAddress',
+                onclick: () => openAddressForm()});
+        changeAddress.style.color = 'blue';
+        let div = Object.assign(document.createElement('div'), {className:'existedAddress', innerText:deliveryAddress});
+        div.insertAdjacentElement("afterbegin", title);
+        div.appendChild(changeAddress);
+        document.querySelector('#mainField').insertAdjacentElement('afterbegin', div);
+    }
+
+    function createProductOLForTable(product, amount, rowNumber) {
+        if (!product) {
+            storage.removeItem('orderLines');
+            return;
+        }
+        let img = product?.pictures ? product.pictures[0] : null;
+        return `
+                <tr id="${rowNumber}" style="height: fit-content;">
+                    <td style="width: 15vw; background: url( ${img
+            ? ('data:' + img.type.trim() + ';base64,' + img.content)
+            : '/no-image.png'}) center center no-repeat;
+                            background-size: 9vw">
+                    </td>
+                    <td style="width 30vw; min-height: 5vh">
+                        <table style="width: 29vw">
+                            <tbody class="sub-table" style="font-size: x-small">
+                                <tr><td>Код товара: <span class="pId" name="${rowNumber}" style="font-size: small;">${product.id.trim()}</span></td></tr>
+                                <tr><td>Товар: <span style="font-size: small">${enumsRu[ product.nomination.trim() ] ? enumsRu[ product.nomination.trim() ] : product.nomination.trim()}</span></td></tr>
+                                ${product?.brand ? '<tr><td>Брэнд: <span style="font-size: small">' + product.brand.trim() + '</span></td></tr>' : ''}
+                                ${product?.model ? '<tr><td>Модель: <span style="font-size: small">' + product.model.trim() + '</span></td></tr>' : ''}
+                                ${product?.frameType ? '<tr><td>Оправа: <span style="font-size: small">'
+                                    + (enumsRu[ product.frameType.trim() ] ? enumsRu[ product.frameType.trim() ] : product.frameType.trim()) + '</span></td></tr>' : ''}
+                                ${product?.frameSize ? '<tr><td>Размер: <span style="font-size: small">'
+                                    + (enumsRu[ product.frameSize.trim() ] ? enumsRu[ product.frameSize.trim() ] : product.frameSize.trim()) + '</span></td></tr>' : ''}
+                                ${product?.gender ? '<tr><td>Пол: <span style="font-size: small">'
+                                    + (enumsRu[ product.gender.trim() ] ? enumsRu[ product.gender.trim() ] : product.gender.trim()) + '</span></td></tr>' : ''}
+                                ${product?.lensType ? '<tr><td>Линза: <span style="font-size: small">'
+                                    + (enumsRu[ product.lensType.trim() ] ? enumsRu[ product.lensType.trim() ] : product.lensType.trim()) + '</span></td></tr>' : ''}
+                                ${product?.volume ? '<tr><td>Объем: <span style="font-size: small">' + product.volume.trim() + ' ml</span></td></tr>' : ''}
+                                ${product?.sp ? '<tr><td>Сфера: <span style="font-size: small">' + product.sp.trim() + '</span></td></tr>' : ''}
+                                ${product?.cyl ? '<tr><td>Цылиндр: <span style="font-size: small">' + product.cyl.trim() + '</span></td></tr>' : ''}
+                                ${product?.distance ? '<tr><td>Расстояние: <span style="font-size: small">' + product.distance + ' мм</span></td></tr>' : ''}
+                            </tbody>
+                        </table>
+                    </td>
+                    <td style="width: 15vw; text-align: center;"><span class="pPrice" name="${rowNumber}">${product.price.trim()}</span> ₴</td>
+                    <td style="width: 15vw; text-align: center;">
+                        <div class="amount-control">
+                            <input type="button" class="reduce-button" name="${rowNumber}" onclick="changeQuantity(event)"  value="-"/>
+                            <input class="product-amount" name="${rowNumber}" id="${product.id.trim()}" oninput="changeTotals(this)" value="${amount}"/>
+                            <input type="button" class="increase-button" name="${rowNumber}"  onclick="changeQuantity(event)" value="+"/>
+                        </div>
+                    </td>
+                    <td style="width: 15vw; text-align: center;">
+                        <span class="pTotal" name="${rowNumber}">${calculateTotal(product.price, amount)}</span> ₴
+                    </td>
+                    <td style="text-align: center;"><input type="button" value="Удалить" id="${product.id.trim()}" onclick="deleteLine(this.id.trim())"/></td>
+                </tr>`;
+    }
+
+    function createConstructorOLForTable(goods, c, rowNumber){
+        console.log("createConstructorOLinesForTable() Start!");
+        console.log('goods: ' + goods.length + ' const: ' + JSON.stringify(c) + ' Row: ' + rowNumber + ' !');
+        let frame = goods.find(p => p.id.trim() === c.frame);
+        let img = frame?.pictures && frame.pictures.length > 0 ? frame.pictures[0] : null;
+        let odLens = goods.find(p => p.id.trim() === c.odLens);
+        let osLens = goods.find(p => p.id.trim() === c.osLens);
+        return `
+            <tr id="${rowNumber}" style="height: fit-content;">
+                <td style="background: url(${img ? 'data:' + img.type.trim() + ';base64,' + img.content : '/no-image.png'})
+                        center center no-repeat; background-size: contain;">
+                </td>
+                <td style="width 30vw; min-height: 5vh">
+                    <table class="sub-table">
+                        <tbody >
+                            <tr><td><span style="font-size: small">Оправа:</span></td></tr>
+                            <tr><td>Код:<span style="font-size: small">${frame.id.trim()}</span></td></tr>
+                            <tr>
+                                <td>
+                                Брэнд: <span style="font-size: small">${frame.brand.trim()}</span>,<br>
+                                    модель: <span style="font-size: small">${frame.model.trim()}</span>
+                                </td>
+                            </tr>
+                            <tr><td>Расстояние: <span style="font-size: small">${c.distance}</span></td></tr>
+                        </tbody>
+                    </table>
+                    <br>
+                    <table class="sub-table">
+                        <tbody>
+                            <tr><td><span>OS (Левая линза):</span></td></tr>
+                            <tr><td>Код: <span style="font-size: small">${odLens.id.trim()}</span></td></tr>
+                            <tr><td>Брэнд: <span style="font-size: small">${odLens.brand.trim()}</span></td></tr>
+                            <tr>
+                                <td>
+                                    сфера (sp): <span style="font-size: small">${odLens.sp}</span>,
+                                    цилиндр (cyl): <span style="font-size: small">${odLens.cyl}</span>
+                                    ${c.odAngle ? ', Угол: <span style="font-size: small">' + c.odAngle + '&deg;</span>': ''};
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <br>
+                    <table class="sub-table">
+                        <tbody>
+                            <tr><td><span>OD (Правая линза):</span></td></tr>
+                            <tr><td>Код: <span style="font-size: small">${osLens.id.trim()}</span></td></tr>
+                            <tr><td>Брэнд: <span style="font-size: small">${osLens.brand.trim()}</span></td></tr>
+                            <tr>
+                                <td>
+                                    сфера: <span style="font-size: small">${osLens.sp}</span>, цилиндр:
+                                    <span style="font-size: small">${osLens.cyl}</span>
+                                    ${c.osAngle ? ', Угол: <span style="font-size: small">' + c.osAngle + '&deg;</span> ' : ''};
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </td>
+                <td style="width: 15vw; text-align: center;"><span class="pPrice" name="${rowNumber}">${c.total}</span> ₴</td>
+                <td style="width: 15vw; text-align: center;">
+                    <div class="amount-control">
+                        <input type="button" class="reduce-button" name="${rowNumber}" onclick="changeQuantity(event)"  value="-"/>
+                        <input class="product-amount" name="${rowNumber}" id="constructor${rowNumber}" oninput="changeTotals(this)" value="${c.amount}"/>
+                        <input type="button" class="increase-button" name="${rowNumber}"  onclick="changeQuantity(event)" value="+"/>
+                    </div>
+                </td>
+                <td style="width: 15vw; text-align: center;">
+                        <span class="pTotal" name="${rowNumber}">${calculateTotal(c.total, c.amount)}</span> ₴
+                </td>
+                <td style="text-align: center;"><input type="button" value="Удалить" id="constructor${rowNumber}" onclick="deleteLine(this.id)"/></td>
+            </tr>
+        `;
+    }
+
+    function changeTotals(target){
+        console.log("Change changeTotals()");
+        const rowNumber = target.name;
+        document.querySelector(`.pTotal[name='${rowNumber}']`).value =
+            calculateTotal(document.querySelector(`.pPrice[name='${rowNumber}']`).textContent, target.value );
+        changeOrderTotal();
+    }
+
+    function calculateTotal(strPrice, amount){
+        console.log("Change calculateTotal()");
+        if (strPrice.match(/[\\.,]+/)){
+            console.log("StrPrice: " + strPrice + " amount: " + amount);
+            strPrice = strPrice.substring(0, strPrice.indexOf(strPrice.includes('.') ? '.' : ','));
+            console.log("StrPrice substr: " + strPrice);
+            document.querySelector(`.pTotal[name]`)
+            return (strPrice * amount).toString() + ',00';
+        }
+    }
+
+    function changeOrderTotal(){
+        console.log("Change changeOrderTotal()");
+        const allTotal = Array.from(document.querySelectorAll('.pTotal'));
+        let orderTotal = 0;
+        for (let oLTotalElem of allTotal){
+            let oLTotal = oLTotalElem.textContent;
+            orderTotal += +oLTotal.substring(0, oLTotal.indexOf(oLTotal.includes(',')? ',' : '.'));
+        }
+        console.log("Total: " + orderTotal);
+        document.querySelector('#orderTotal').innerHTML = orderTotal.toString() + ',00 ₴';
+    }
+
+    function changeQuantity(event){
+        console.log("Change changeQuantity()");
+        let amount;
+        switch (event.target.className){
+            case ('reduce-button'): {
+                amount = event.target.nextElementSibling;
+                if (+amount.value > 1){
+                    amount.value--;
+                }
+                break;
+            }
+            case ('increase-button'): {
+                amount = event.target.previousElementSibling;
+                amount.value++;
+                break;
+            }
+        }
+        document.querySelector(`.pTotal[name='${event.target.name}']`).innerHTML =
+                calculateTotal(document.querySelector(`.pPrice[name='${amount.name}']`).textContent, amount.value);
+        if (document.querySelector(`.pId[name='${event.target.name}']`)) {
+            saveOLInCache(document.querySelector(`.pId[name='${event.target.name}']`).textContent,
+                document.querySelector(`.product-amount[name='${event.target.name}']`).value);
+        } else {
+            saveOLInCache(amount.id, amount.value);
+        }
+        changeOrderTotal();
+    }
+
+    function deleteLine(id) {
+        let index;
+        if (!id.includes('constructor')) {
+            index = orderLines.indexOf(orderLines.find(ol => ol.productId.trim() === id.trim()));
+            orderLines.splice(index, 1);
+            storage.setItem('orderLines', JSON.stringify(orderLines));
+        } else {
+            index = +id.replace(/\D+/ig, '') - 1;
+            constructors.splice(index, 1);
+            storage.setItem('constructors', JSON.stringify(constructors));
+        }
+        makeTableBody();
+    }
+
+    function saveOLInCache(id, amount){
+        let i;
+        if (!id.includes('constructor')) {
+            i = orderLines.findIndex(line => line.productId === id);
+            orderLines[i].amount = amount;
+            storage.removeItem('orderLines');
+            storage.setItem('orderLines', JSON.stringify(orderLines));
+        } else {
+            i = +id.replace(/\D+/ig, '') - 1;
+            constructors[i].amount = amount;
+            storage.removeItem('constructors');
+            storage.setItem('constructors', JSON.stringify(constructors));
+        }
+    }
+
+    // TODO: absolutely working method saveOrder()
+    // function saveOrder(){
+    //     const xhr = new XMLHttpRequest();
+    //     let form = new FormData();
+    //     form.append('orderLines[]', JSON.stringify(orderLines));
+    //     form.append("enctype", "application/json");
+    //     xhr.open('post', '/shop/orders/new');
+    //     xhr.send(form);
+    // }
+    //
+    // TODO: absolutely working method saveOrder()2
+    // async function saveOrder1() {
+    //     if (deliveryAddress) {
+    //         const xhr = new XMLHttpRequest();
+    //         let form = new FormData();
+    //         form.append('orderLines[]', JSON.stringify(orderLines));
+    //         form.append("enctype", "application/json");
+    //         form.append('address', deliveryAddress);
+    //         xhr.open('post', '/shop/orders/new');
+    //         let order;
+    //         let user;
+    //         let promise = await fetch("/shop/api/users/auth-customer/info");
+    //         await promise.json().then(response => user = response);
+    //         xhr.send(form);
+    //         xhr.onreadystatechange = () => {
+    //             if (xhr.readyState === 4 && xhr.status === 200){
+    //                 order = JSON.parse(xhr.response);
+    //                 console.log('Order: ' + order + ' Id: ' + order['id'] + "  " + order.id);
+    //                 setTimeout(() => alert(`Спасибо за заказ!\nНомер Заказа: ${order.id}`), 100);
+    //                 return window.location=`/shop/orders/page/${user.id? user.id : ''}?orderId=${order.id}`;
+    //             }
+    //         }
+    //     } else {
+    //         let role = [[${#authorization.expression('hasRole("ROLE_ANONYMOUS")')}]];
+    //         storage.setItem('orderLines', JSON.stringify(orderLines));
+    //         storage.setItem('positionToReturn', '/shop/orders/basket/page');
+    //         return window.location = (role ? '/shop/api/users/login' : '/shop/api/users/address/page');
+    //     }
+    // }
+
+    // Save Order through fetch()
+     async function saveOrder(){
+        if (deliveryAddress){
+            let form = new FormData;
+            form.append('orderLines[]', JSON.stringify(orderLines));
+            form.append('constructors[]', JSON.stringify(constructors));
+            form.append('enctype', 'application/json');
+            form.append('address', deliveryAddress);
+            let response = await fetch('/shop/orders/new', {
+                method:'POST',
+                headers: {'contentType': 'application/json'},
+                body: form
+            });
+            if (response.ok) {
+                let id;
+                await response.json().then(data => id = data.id.trim()).catch(e => {
+                    console.error("Продукт не создан. Непредвиденная ошибка! " + e);
+                });
+                if (id) {
+                    storage.removeItem('orderLines');
+                    storage.removeItem('constructors');
+                    return window.location = '/shop/orders/by_id/' + id;
+                }
+            }
+        } else if(userAuth.find(obj => obj.authority === 'ROLE_ANONYMOUS')){
+            storage.setItem('positionToReturn', '/shop/orders/basket/page')
+            return window.location='/shop/api/users/login';
+        } else {
+            console.log('SaveOrder() > openAddressForm()');
+            openAddressForm();
+        }
+    }
+
+</script>
+</body>
+</html>

@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org" xmlns="http://www.w3.org/1999/html">
+<head>
+    <th:block th:insert="~{fragments/commons :: head}"></th:block>
+    <title>Aspect-Optics/ТОВАР</title>
+    <th:block th:insert="~{fragments/commons :: singe-product-css}"></th:block>
+    <style>
+        .modal{
+            display: flex;
+            position: fixed;
+            inset: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            cursor: pointer;
+            z-index: 100;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal:active {
+            display: none;
+        }
+
+        .modal-img{
+            position: relative;
+            padding: 20px 20px 20px 20px;
+            height: 60vw;
+            min-height: 250px;
+            max-height: 650px;
+            width: 80vw;
+            min-width: 270px;
+            max-width: 800px;
+            border-radius: 10px;
+            background-color: white;
+            cursor: default;
+            justify-items: center;
+        }
+
+        .product-images:target  {
+            display: block;
+        }
+
+        .modal-selector{
+            display: inline-block;
+            position: relative;
+            bottom: 0;
+            width: 78vw;
+            min-width: 150px;
+            max-width: 800px;
+            height: 35px;
+            background-color: white;
+            border: 4px double oldlace;
+            border-radius: 5px;
+            z-index: 99;
+        }
+
+        .modal-selector img{
+            width: 40px;
+            height: 30px;
+            margin-left: 3px;
+            border: 2px double;
+            background-size: contain;
+        }
+
+        .modal-main-img{
+            height: 55vw;
+            min-height: 210px;
+            max-height: 610px;
+            width: 80vw;
+            min-width: 270px;
+            max-width: 800px;
+            background-color: wheat;
+            background-size: contain !important;
+        }
+    </style>
+</head>
+<body>
+
+<div class="modal" onclick="hideModal(event)" style="display:none;">
+    <div class="modal-img">
+        <div th:if="${!product?.pictures?.isEmpty()}" class="modal-main-img"></div>
+        <div th:if="${!product?.pictures?.isEmpty()}" class="modal-selector">
+            <img onclick="showInModal(event)" class="modal-pre" th:each="pic : ${product.pictures}" th:src="'data:' + ${pic.type.trim()} + ';base64,' + ${pic.useBase64Encoder.trim()}" th:alt="${pic.name}" />
+        </div>
+    </div>
+</div>
+
+<th:block th:insert="~{fragments/commons :: nav-bar}"></th:block>
+<th:block th:insert="~{fragments/commons :: side-bar}"></th:block>
+
+<div class="main-field" id="mainField">
+    <div class="sp-ins" id="spare-insertable" style="display: none;"></div>
+    <div id="insertable" th:object="${product}">
+        <div class="product_img_holder">
+            <div th:if="${!product?.pictures?.isEmpty()}" onclick="showInModal(event)" class="product-images" id="product-images"></div>
+            <div th:if="${!product?.pictures?.isEmpty()}" id="image-selector" class="img-selector">
+                <img th:class="product-pre" th:each="pic : ${product.pictures}" th:src="'data:' + ${pic.type.trim()} + ';base64,' + ${pic.useBase64Encoder.trim()}" th:alt="${pic.name}" />
+            </div>
+            <div class="product-images" th:unless="${product.pictures != null && product.pictures.size() > 0}">
+                <img hidden class="picture" src="/no-image.png" alt="no-image">
+            </div>
+        </div>
+        <div id="product-id" class="field" style="top: 0;">Код товара: <span id="pId" th:utext="${product.id.trim()}">id</span></div>
+        <div id="product-nomination" style="top: 5rex;" class="field">Наименование: <span th:utext="${product.getNominationRu()}"></span></div>
+        <div th:if="${product?.brand}" id="product-brand" style="top: 10rex;" class="field">Брэнд: <span th:utext="${product?.brand.trim()}">brand</span></div>
+        <div th:if="${product?.model}" id="product-model" style="top: 13rex;" class="field">Модель: <span th:utext="${product?.model.trim()}">model</span></div>
+        <div id="product-price" class="field" style="top: 16rex;">Цена товара:  <span class="pPrice" th:name="${product.id.trim()}" th:utext="${product.price.trim()}">price</span> ₴</div>
+        <div id="product-total-price">Всего: <span class="pTotal" th:name="${product.id}" th:utext="${product.price.trim()}"></span> ₴</div>
+        <div class="amount-control">
+            <label th:for="${product.id.trim()}">Количество: </label>
+            <input type="button" class="reduce-button" onclick="changeAmount('decrease')" value="-"/>
+            <input class="product-amount" value="1"/>
+            <input type="button" class="increase-button" onclick="changeAmount('increase')" value="+"/>
+        </div>
+        <button th:disabled="${!product.available}" type="button" onclick="putToBasket()" id="buy-button">&#128722;|<small>В корзину</small></button>
+    </div>
+
+    <div id="additional-product-parameters">
+            <div th:if="${product?.frameType}" class="field" style="top: 20rex;" id="frame-type">Тип оправы: <span th:utext="${product?.getFrameTypeRu()}">FrameType</span></div>
+            <div th:if="${product?.frameSize}" class="field" style="top: 23rex;" id="frame-size">Размер оправы: <span th:utext="${product?.getFrameSizeRu()}">FrameSize</span></div>
+            <div th:if="${product?.gender}" class="field" style="top: 26rex;" id="frame-gender">Пол: <span th:utext="${product?.getGenderRu()}">Gender</span></div>
+            <div th:if="${product?.lensType}" class="field" style="top: 29rex;" id="lens-type">Тип линзы: <span th:utext="${product?.getLensTypeRu()}">FrameType</span></div>
+            <div th:if="${product?.sp}" class="field" style="top: 32rex;" id="product-sp">Сфера: <span th:utext="${product?.sp}">SP</span></div>
+            <div th:if="${product?.cyl}" class="field" style="top: 35rex;" id="product-cyl">Цилиндр: <span th:utext="${product?.cyl}">Cyl</span></div>
+            <div th:if="${product?.distance}" class="field" style="top: 38rex;" id="product-distance">Расстояние: <span th:utext="${product?.distance}">Distance</span> мм.</div>
+            <div th:if="${product?.volume}" class="field" style="top: 41rex;" id="product-volume">Объем: <span th:utext="${product?.volume}">Volume</span> мл.</div>
+    </div>
+    <form th:if="${#authorization.expression('hasAnyRole({''SYSADMIN'', ''STAFF''})')}" class="form-update">
+        <button class="btn-update" type="button" onclick="window.location=`/shop/products/renew/${document.querySelector('#pId').textContent}`">Изменить</button>
+        <button class="btn-rm" type="button" onclick="deleteProduct()">Удалить</button>
+    </form>
+<div th:if="${product?.description}" id="product-description" class="field-description">Описание: <br><div class="description" th:utext="${product?.description}">description</div></div>
+</div>
+
+<th:block th:insert="~{fragments/commons :: home-btn-and-service-script}"></th:block>
+<th:block th:insert="~{fragments/commons :: products-from-server}"></th:block>
+
+<script>
+
+    window.onload = () => {
+        if (top !== window){
+            top.location = window.location;
+        }
+        document.querySelector('#sideMenu').addEventListener('selectstart', event => { event.preventDefault() });
+        document.querySelector('.nav-bar').addEventListener('selectstart', event => { event.preventDefault() });
+        document.querySelector('.pTotal').innerText = document.querySelector('.pPrice').textContent;
+        if (document.querySelector('.picture')) {
+            document.querySelector('.picture').hidden = false;
+        }
+        if(el('product-images')) {
+            el('product-images').style.background = "url('" + el('image-selector').firstElementChild.src + "') no-repeat center center ";
+            el('product-images').style.backgroundSize = 'contain';
+            for (let img of (document.getElementById('image-selector')).children) {
+                img.addEventListener("click", event => {
+                    el('product-images').style.background = "url('" + img.src + "') no-repeat center center";
+                    el('product-images').style.backgroundSize = 'contain';
+                })
+            }
+        }
+        if (![null, 'undefined', '[]'].includes(storage.getItem('orderLines'))) {
+            orderLines = JSON.parse(storage.getItem('orderLines'));
+            showOLCount();
+        }
+        if(storage.getItem('allProducts')){
+            allProducts = JSON.parse(storage.getItem('allProducts'));
+        }
+        el('#menu-btn').addEventListener('click', () => activateMenuListener('spare-insertable', true));
+        showUnchecked();
+    }
+
+    function putToBasket() {
+        let orderLine = {
+            productId: (el('pId').textContent).trim(),
+            amount: (+document.querySelector('.product-amount').value),
+        }
+        let existedOL = (orderLines?.length > 0)? orderLines.find(ol => ol.productId === orderLine.productId) : null;
+        console.log("Storage before!: " + storage.getItem("orderLines"))
+        if (existedOL){
+            orderLine.amount = orderLine.amount + existedOL.amount;
+            console.log("OrderLines amount: " + (orderLine.amount + existedOL.amount))
+            orderLines.splice(orderLines.indexOf(existedOL), 1, orderLine )
+            storage.removeItem('orderLines');
+            storage.setItem('orderLines', JSON.stringify( orderLines ));
+            console.log("Exist!")
+        } else {
+            orderLines.push(orderLine);
+            storage.removeItem('orderLines');
+            storage.setItem('orderLines', JSON.stringify(orderLines));
+            console.log("Doesn't exist!")
+        }
+        console.log("Storage after: " + storage.getItem('orderLines'));
+        showOLCount();
+    }
+
+    function deleteProduct(){
+        let id = document.querySelector('#pId').textContent.trim();
+        fetch('/shop/products/rm/' + id, {method:'DELETE'});
+    }
+
+    function changeAmount(ev){
+        let input = document.querySelector('.product-amount');
+        if (!input.value) {
+            input.value = 1;
+            return;
+        }
+        switch (ev) {
+            case ('decrease') : {
+                input.value = +input.value > 1 ? +input.value - 1 : input.value;
+                break;
+            }
+            case ('increase') : {
+                input.value = +input.value + 1;
+                break;
+            }
+        }
+        displayTotal();
+    }
+
+    function displayTotal(){
+        let amountInp = document.querySelector('.product-amount');
+        let price = +document.querySelector('.pPrice').textContent.match(/\d+/).toString();
+        document.querySelector('.pTotal').innerText = ((+amountInp.value) * price) + ',00';
+    }
+
+    function showInModal(event){
+        let src = event.target.src? 'url(' + event.target.src + ') center center no-repeat' : event.target.style.background
+        console.log("Event target classList: " + event.target.classList);
+        console.log("Event target " + ( event.target.src ? 'src: ' : 'style background: ') + (src ? 'true !': 'false'));
+        document.querySelector('.modal-main-img').style.background = src.trim();
+        if (document.querySelector('.modal').style.display !== 'flex') {
+            document.querySelector('.modal').style.display = 'flex';
+        }
+    }
+
+    function hideModal(event){
+        if (event.target === document.querySelector('.modal')){
+            event.target.style.display = 'none';
+        }
+    }
+</script>
+</body>
+</html>

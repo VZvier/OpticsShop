@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org"
+<head>
+  <th:block th:insert="~{fragments/commons :: head}"></th:block>
+  <title>Список заказов</title>
+  <style>
+    body{
+      scrollbar-width: thin;
+    }
+
+    #insertable{
+      justify-items: center;
+      overflow: scroll;
+      padding: 0 0 0 30px;
+      scrollbar-width: none;
+    }
+
+    th, td{
+      padding: 5px 5px 5px 5px;
+      border: 1px solid;
+      border-radius: 3px;
+    }
+    
+    table thead{
+      cursor: default;
+    }
+    
+    table tr:not(thead tr):hover {
+      cursor: pointer;
+      background-image: linear-gradient(183deg, lightskyblue, white 50%, lightskyblue);
+    }
+
+    .ol-act{
+    font-size: min(10px, max(16px, 1vw));
+    width: 10vw;
+    min-width: 70px;
+    max-width: 150px;
+  }
+
+    .cr-info {
+      width: 20vw;
+      min-width: 100px;
+      max-width: 150px;
+    }
+
+    .order-table{
+      margin: 0 0 0 20px;
+    }
+
+    .xsm{
+      font-size: x-small;
+    }
+    .sm{
+      font-size: small;
+      background-color: lavender;
+      border-radius: 3px;
+      padding: 0 2px 0 2px;
+    }
+    .constr-prod{
+      border: 1px double #a9c2e3;
+    }
+    .constr{
+      padding: 2px 2px 0 2px;
+      margin-block-end: 5px;
+      border: 2px double black;
+      border-radius: 3px;
+    }
+    .const-header{
+      font-size: 16px;
+      background-image: linear-gradient(0deg, lightblue, white 45%, lightskyblue);
+      margin: 5px 0 5px 0;
+      border-radius: 3px;
+    }
+
+    .ol-name{
+      font-size: medium;
+      background-color: wheat;
+    }
+  </style>
+</head>
+<body>
+
+<th:block th:insert="~{fragments/commons :: nav-bar}"></th:block>
+<th:block th:insert="~{fragments/commons :: side-bar}"></th:block>
+
+<div class="main-field" id="mainField">
+  <div id="spare-insertable"></div>
+  <div id="insertable">
+    <table id="ordersTable" class="order-table">
+      <thead>
+      <tr>
+        <td>Код заказа</td>
+        <td>Заказчик</td>
+        <td>Товар</td>
+        <td>всего</td>
+        <td>Статус</td>
+        <td>Даты</td>
+        <td>Изменить</td>
+      </tr>
+      </thead>
+      <tbody class="main-table">
+      </tbody>
+    </table>
+  </div>
+</div>
+
+
+<script data-th-inline="javascript">
+  const ordersFromServer = [[ ${orderList} ]];
+</script>
+
+<script>
+
+  window.onload = () => {
+    loadMainFunctions();
+    document.querySelector('#menu-btn').addEventListener('click', () => activateMenuListener('spare-insertable', true));
+    replaceStatuses();
+    createTableBody();
+  }
+
+  function createTableBody(){
+    let table = document.querySelector('.main-table');
+    if (ordersFromServer){
+      table.innerHTML = createHtmlForOrdersTable();
+    } else {
+      table.innerHTML =
+              `<tr><td colspan="7" style="background-color: red; color: white;" id="warn">Заказов не найдено!!!</td><tr>`;
+      setTimeout(() => {
+        setInterval(() => {
+          el('warn').style.backgroundColor = el('warn').style.backgroundColor === 'red' ? 'white' : 'red'}, 700);
+      }, 5000);
+    }
+    el('.main-table').innerHTML = createHtmlForOrdersTable();
+    Array.from(document.querySelectorAll('.order')).forEach(tr => showMoreOrderInfo(tr))
+  }
+
+  function createHtmlForOrdersTable(){
+    console.log("Start create htmlForOrdersTable() !");
+    let orders = ordersFromServer;
+    let orderHtml = '';
+    let orderLinesAmount = 0;
+    if (orders && orders.length > 0) {
+      for (let order of orders) {
+        orderLinesAmount = order.orderLines.length + order.constructors.length;
+        orderHtml += `
+        <tr class="order" id="${order.id.trim()}" onclick="showMoreOrderInfo(this.closest('tr'), this)">
+          <td style="font-size: x-small;">Код заказа: <br>${order.id.trim()}</td>
+          <td class="cr-info">
+            <span class="xsm">Id пользователя: </span><br class="xsm"><span class="xsm">${order.customer.user.id.trim()}</span><br class="xsm"><hr class="xsm">
+            <span class="xsm">Логин:  </span><br class="xsm"><span class="sm">${order.customer.user.login.trim()}</span><br class="xsm"><hr class="xsm">
+            <span class="xsm">ФИО:    </span><br class="xsm"><span class="sm">
+                    ${order.customer.lname.trim() + ' ' + order.customer.fname.trim() + ' ' + order.customer.fatherName.trim()}
+            </span><br class="xsm"><hr class="xsm">
+            <span class="xsm">Тел:    </span><br class="xsm"><span class="sm">${order.customer.contact.phone}</span><br class="xsm"><hr class="xsm">
+            <span class="xsm">Email:  </span><br class="xsm"><span class="sm">${order.customer.contact.email}</span><br class="xsm"><hr class="xsm">
+            <span class="xsm">Адресс доставки: </span><br class="xsm"><span class="ol-address xsm" style="max-width: 250px;">${order.address}</span>
+          </td>
+          <td class="ordered-info">
+            ${makeColumnForConstructors(order.constructors)}
+            ${makeColumnForProducts(order.orderLines)}
+            <div class="ordered-amount" style="font-size: x-small">Предметов в заказе - ${orderLinesAmount} шт.</div>
+          </td>
+          <td class="sm">
+            <span>${calculateOrderFinale(order.constructors, order.orderLines)}</span> ₴
+          </td>
+          <td>
+              <span class="staticStatus" style="font-size: small;">${enumsRu[order.status.trim()] ? enumsRu[order.status.trim()] : order.status.trim()}</span>
+          </td>
+          <td>
+            <span class="xsm">Создан:</span><br>
+            <span class="xsm">${order.created.split(' ')[1] + ' в ' + order.created.split(' ')[0]}</span><br><br>
+            <span class="xsm">Изменен:</span><br>
+            <span class="xsm">${order.updated.split(' ')[1] + ' в ' + order.updated.split(' ')[0]}</span>
+          </td>
+          <td>
+            ${(['CONFIRMED', 'ACCEPTED', 'PROCESSING'].includes(order.status.trim()) && userAuth.find(r => ['ROLE_STAFF', 'ROLE_USER'].includes(r.authority))) || userAuth.find(r => r.authority === 'ROLE_SYSADMIN') ?
+               '<button type="button" class="ol-act"' +
+                    'onclick="openUpdateOrderPage(this, event)">' +
+                  'Изменить' +
+               '</button>' : ''}
+            <br>
+            ${(['ACCEPTED', 'PROCESSING', 'CONFIRMED'].includes(order.status.trim()) && userAuth.find(r => ['ROLE_STAFF', 'ROLE_USER'].includes(r.authority))) || userAuth.find(r => r.authority === 'ROLE_SYSADMIN') ?
+              '<button class="ol-act" type="button" onclick="deleteOrder(this, event)">' +
+                'Удалить' +
+              '</button>' : ''}
+        </td>
+      </tr>`
+      }
+    } else {
+      orderHtml +=
+          `<tr>
+            <td colspan="7" style="background-color: red;text-align: center; font-size: 16px;">
+              Заказы удовлетворяющие запросу отсутствуют!
+            </td>
+          </tr>`
+    }
+    return orderHtml;
+  }
+
+  function makeColumnForConstructors(constructorOLines){
+    let column = ``;
+    for (let ol of constructorOLines){
+      column += `
+            <div id="${ol.id}" class="constr"><u class="const-header">Конструктор:</u>
+                <div name="frame" class="constr-prod"><u class="ol-name">Оправа:</u>
+                    <div class="xsm">Код: <span class="sm">${ol.constructor.frame.id}</span></div>
+                    <div class="xsm">Брэнд: <span class="sm">${ol.constructor.frame.brand}</span></div>
+                    <div class="xsm">Модель: <span class="sm">${ol.constructor.frame.model}</span></div>
+                </div>
+                <div name="odLens" class="constr-prod"><u class="ol-name">Правая линза:</u>
+                      <div class="xsm">Код: <span class="sm">${ol.constructor.odLens.brand}</span></div>
+                      <div class="xsm">Сфера: <span class="sm">${ol.constructor.odLens.sp}</span></div>
+                       <div class="xsm">Цылиндр: <span class="sm">${ol.constructor.odLens.cyl}</span></div>
+                      ${ol.constructor.odCylAngle != null ? '<div class="xsm">Угол: <span class="sm">' + ol.constructor.odCylAngle + '&deg;</span></div>' : ''}
+                </div>
+                <div name="osLens" class="constr-prod"><u class="ol-name">Левая линза:</u>
+                    <div class="xsm">Код: <span class="sm">${ol.constructor.osLens.brand}</span></div>
+                    <div class="xsm">Сфера: <span class="sm">${ol.constructor.osLens.sp}</span></div>
+                    <div class="xsm">Цылиндр: <span class="sm">${ol.constructor.osLens.cyl}</span></div>
+                    ${ol.constructor.osCylAngle != null ? '<div class="xsm">Угол: <span class="sm">' + ol.constructor.osCylAngle + '&deg;</span></div>' : '' }
+                </div>
+              ${ol.constructor.distance != null ? '<div class="xsm">Расстояние: <span class="sm">' + ol.constructor.distance + '</span> мм.</div><hr>' : ''}
+              <div class="xsm">Заказано <span class="sm">${ol.quantity}</span> шт. на <span class="sm olTotal">${calculateOLFinale(ol.constructor)}</span> ₴</div>
+              <div class="xsm">По <span class="sm">${ol.price}</span> ₴</div>
+            </div>
+      `;
+    }
+    return column;
+  }
+
+  function showMoreOrderInfo(row){
+      let elems = Array.from(row.querySelectorAll('.cr-info .xsm, .ordered-info .constr'));
+      let hidden = elems.find(e => e.style.display === 'none');
+      if (hidden) {
+        elems.forEach(e => e.style.display = '');
+        el('.ordered-amount').style.display = 'none';
+      } else {
+        elems.forEach(e => e.style.display = 'none');
+        el('.ordered-amount').style.display = '';
+      }
+  }
+
+  function calculateOLFinale(obj){
+    let price = obj.price.match(/\d+/).toString();
+    let quantity = +obj.quantity.trim();
+    let total = price * quantity + ',00';
+    console.log(`OL price: ${price}, quantity: ${quantity}. Total: ${total}`);
+    return total;
+  }
+
+  function calculateOrderFinale(constructors, oLines){
+    let total = 0;
+    Array.from(document.querySelectorAll('.constr .olTotal'))
+            .forEach(p => total += +p.textContent.match(/\d+/).toString());
+    console.log('Finally Price: ' + total + ',00');
+    return total + ",00";
+  }
+
+  function makeColumnForProducts(orderLines){
+    let column = '';
+    for(let ol of orderLines) {
+      column += `
+      <div class="constr">
+          <u class="const-header">
+                ${enumsRu[ol.product.nomination.trim()] ? enumsRu[ol.product.nomination.trim()] : ol.product.nomination.trim()}
+          </u>
+          <div class="xsm">Код:
+              <span class="sm">${ol.product.id.trim()}</span>
+          </div>
+          <div class="xsm">Брэнд:
+              <span class="sm">${ol.product.brand.trim()}</span>
+          </div>
+        ${ol.product?.model != null ?
+          '<div>' +
+              '<span class="xsm">Модель: </span>' +
+              '<span class="sm">' + ol.product.model.trim() + '</span>'+
+          '</div>' : ''}
+        ${ol.product?.frameType != null ?
+          '<div>' +
+              '<span class="xsm">Тип оправы: </span>' +
+              '<span class="sm">' +(enumsRu[ol.product.frameType.trim()] ? enumsRu[ol.product.frameType.trim()] : ol.product.frameType.trim())+ '</span>' +
+          '</div>'  : ''}
+        ${ol.product?.frameSize != null ?
+          '<div>' +
+              '<span class="xsm">Размер: </span>' +
+              '<span class="sm">' + (enumsRu[ol.product.frameSize.trim()] ? enumsRu[ol.product.frameSize.trim()] : ol.product.frameSize.trim()) + '</span>' +
+          '</div>' : ''}
+        ${ol.product?.gender != null ?
+          '<div>' +
+              '<span class="xsm">Пол: </span>' +
+              '<span class="sm">' + (enumsRu[ol.product.gender.trim()] ? enumsRu[ol.product.gender.trim()] : ol.product.gender.trim()) + '</span>' +
+          '</div>' : '' }
+        ${ol.product?.lensType != null ?
+          '<div>' +
+              '<span class="xsm">Тип линзы: </span>' +
+              '<span class="sm">' + (enumsRu[ol.product.lensType.trim()] ? enumsRu[ol.product.lensType.trim()] : ol.product.lensType.trim()) + '</span>' +
+          '</div>' : '' }
+        ${ol.product?.sp != null ?
+          '<div>' +
+              '<span class="xsm">Сфера: </span>' +
+              '<span class="sm">' + ol.product.sp.trim() + '</span>' +
+          '</div>' : ''}
+        ${ol.product?.cyl != null ?
+          '<div>' +
+              '<span class="xsm">Цылиндр: </span>' +
+              '<span class="sm">' + ol.product.cyl.trim() + '</span>' +
+          '</div>' : ''}
+        ${ol.product?.distance != null ?
+          '<div>' +
+              '<span class="xsm">Расстояние: </span>' +
+              '<span class="sm">' + ol.product.distance + ' мм</span>' +
+          '</div>' : ''}
+          <hr>
+        <div>
+          <span class="xsm">Заказано </span>
+          <span class="sm">${ol.quantity.trim()}</span>
+          <span class="xsm">шт. на</span>
+          <span class="sm">${calculateOLFinale(ol)}</span> ₴
+        </div>
+        <div>
+          <span class="xsm">По: </span>
+          <span class="sm">${ol.price.trim()}</span> ₴.
+        </div>
+      </div>
+      `;
+    }
+    return column;
+  }
+
+  function replaceStatuses(){
+    let ordersStatuses = Array.from(document.querySelectorAll('.staticStatus'));
+    for (let oStatus of ordersStatuses){
+      oStatus.innerHTML = enumsRu[oStatus.textContent] ? enumsRu[oStatus.textContent] : oStatus.textContent;
+    }
+  }
+
+  async function deleteOrder(target, event){
+    event.stopPropagation();
+    let targetPP = target.parentElement.parentElement;
+    console.log("Target name: " + target.nodeName + ", Parent of ParentElem name  & Id: " + targetPP.nodeName + ", " + targetPP.id);
+    let id = targetPP.id;
+    let response = await fetch(`/shop/orders/rm/${id}`, {
+      method: 'DELETE',
+      headers: {'contentType':'application/json'}
+    }).catch(e => {
+      console.log("Order id: " + id + " cannot be removed! " + e);
+      alert("Cannot remove order : " + id + "! \n" + e);
+    });
+    if(response.ok){
+      alert('Заказ удален!');
+      setTimeout(() => { window.location.href='/' }, 2000);
+    }
+  }
+
+  function openUpdateOrderPage(target, event){
+    event.stopPropagation();
+    return window.location='/shop/orders/renew/' + target.closest('tr').id;
+  }
+</script>
+
+<th:block th:insert="~{fragments/commons :: home-btn-and-service-script}"></th:block>
+
+</body>
+</html>

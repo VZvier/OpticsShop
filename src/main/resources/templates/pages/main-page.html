@@ -1,0 +1,139 @@
+<!DOCTYPE HTML>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org" xmlns="http://www.w3.org/1999/html">
+<head>
+    <th:block th:insert="~{fragments/commons :: head}"></th:block>
+    <title>ASPECT</title>
+</head>
+
+<body>
+
+<th:block th:insert="~{fragments/commons :: nav-bar}"></th:block>
+<th:block th:insert="~{fragments/commons :: side-bar}"></th:block>
+
+<div class="main-field" id="mainField">
+    <div class="goods-table" id="insertable"></div>
+</div>
+
+<th:block th:insert="~{fragments/commons :: products-from-server}"></th:block>
+<th:block th:insert="~{fragments/commons :: home-btn-and-service-script}"></th:block>
+
+<script name="onload_createGoods_Script">
+
+    window.onload = function () {
+        if (top !== window) {
+            top.location = window.location;
+        }
+        loadMainFunctions();
+        if (!['null','undefined', null, undefined].includes(storage.getItem('orderLines'))){
+            orderLines = JSON.parse(storage.getItem('orderLines'));
+            showOLCount();
+        }
+        if(productsFromServer){
+            storage.removeItem('allProducts');
+            allProducts = productsFromServer;
+            storage.setItem('allProducts', JSON.stringify(productsFromServer));
+        }
+        document.body.addEventListener("selectstart", event => { event.preventDefault() });
+        if (!String.prototype.splice) {
+            String.prototype.splice = function (start, delCount, newSubStr) {
+                return this.slice(0, start) + newSubStr + this.slice(start + delCount, this.length);
+            }
+        }
+        el('#menu-btn').addEventListener('click', () => activateMenuListener('insertable', true));
+        el('filter-list').addEventListener('change', () => filterSearch(event, 'insertable', true));
+        createGoods(allProducts, 'insertable', true);
+        elemsAsArray('.goods-baw').forEach(e => e.style.display = 'none');
+        showUnchecked();
+        getWorkPrice();
+    }
+
+    async function getWorkPrice(){
+        let response = await fetch('/shop/data/work-price');
+        if(response.ok){
+            await response.json().then(data => {
+                workPrice = data;
+                storage.setItem('workPrice', data);
+            });
+        }
+    }
+    async function getProducts(){
+        let response = await fetch('/shop/products/all');
+        const reader = response.body.getReader();
+        const contentLength = +response.headers.get('Content-Length');
+        let receivedLength = 0;
+        let chunks = [];
+        while (true) {
+            const {done, value} = await reader.read();
+            if (done) {
+                break;
+            }
+            chunks.push(value);
+            receivedLength += value.length;
+            console.log(`Получено ${receivedLength} из ${contentLength}`);
+        }
+        let chunksAll = new Uint8Array(receivedLength);
+        let position = 0;
+        for (let chunk of chunks){
+            chunksAll.set(chunk, position);
+            position += chunk.length;
+        }
+        let result = new TextDecoder("utf-8").decode(chunksAll);
+        let products = JSON.parse(result);
+        console.log(products[0].id + ' ' + products[0].nomination + ' ' + products[0].brand);
+        console.log('Products through Unit8Array: ' + products.length);
+    }
+
+</script>
+
+<script name="empty">
+    // async function replaceOptions(elemId) {
+    //     let unique = [];
+    //     let elem = document.getElementById(elemId);
+    //     if (!elem.options) {
+    //         return;
+    //     }
+    //     const sltd = elem.options[elem.selectedIndex];
+    //     elem.innerHTML = '';
+    //     elem.appendChild(Object.assign(document.createElement('option'),
+    //             {value:'none', text:'-Не выбрано-', selected:sltd.value === 'none'}));
+    //     productsFromServer.forEach(p => {
+    //         let trimmed = typeof p[elemId] === 'string' ? p[elemId].trim() : p[elemId];
+    //         if (!unique.includes(trimmed)){
+    //             unique.push(trimmed);
+    //             elem.appendChild(Object.assign(document.createElement('option'), {
+    //                 value: trimmed,
+    //                 text: enumsRu[trimmed] ? enumsRu[trimmed] : trimmed,
+    //                 selected: trimmed === sltd.value,
+    //             }) );
+    //         }
+    //     });
+    // }
+
+    // function showHideSideBarFields(value) {
+    //     let sideBarFields = ['model', 'frameType', 'frameSize', 'gender',
+    //         'lensType', 'distance', 'coeff', 'sp', 'cyl', 'volume'];
+    //     for (let id of sideBarFields) {
+    //         let elem = el(id);
+    //         elem.hidden = true;
+    //         document.querySelector(`label[for=${id}]`).hidden = true;
+    //     }
+    //     switch (value){
+    //         case 'frame' : sideBarFields = ['model', 'frameType', 'frameSize', 'gender']; break;
+    //         case 'ready-glasses' :
+    //             sideBarFields = ['model', 'frameType', 'frameSize', 'gender', 'lensType', 'sp', 'distance'];
+    //             break;
+    //         case 'lens' : sideBarFields = ['lensType', 'coeff', 'sp', 'cyl']; break;
+    //         case 'liquid' : sideBarFields = ['volume']; break;
+    //         case 'medical-equipment' : sideBarFields = ['model']; break;
+    //         default : sideBarFields = []; break;
+    //     }
+    //     for (let sideBarField of sideBarFields) {
+    //         document.querySelector(`label[for=${sideBarField}]`).hidden = false;
+    //         el(sideBarField).hidden = false;
+    //         el(sideBarField).value = '';
+    //     }
+    // }
+</script>
+
+</body>
+</html>

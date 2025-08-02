@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <th:block th:insert="~{fragments/commons :: head}"></th:block>
+    <title>Aspect-Optics/ДОБАВИТЬ ПРОДУКТ</title>
+    <style>
+        body {
+            display: grid;
+            align-content: center;
+            align-items: center;
+            justify-items: center;
+            justify-content: center;
+            overflow-y: scroll;
+        }
+
+        #form {
+            list-style-type: none;
+            text-align: center;
+            justify-items: center;
+        }
+
+        #product-sub-form input, select {
+            width: 170px;
+        }
+
+        .line {
+            width: 40vw;
+            min-width: 200px;
+            max-width: 400px;
+        }
+    </style>
+</head>
+<body>
+
+<th:block th:insert="~{fragments/commons :: nav-bar}"></th:block>
+<th:block th:insert="~{fragments/commons :: side-bar}"></th:block>
+
+<div class="main-field" id="mainField">
+    <div id="spare-insertable"></div>
+    <div id="insertable" style="text-align: center;">
+        <ul id="form">
+            <li id="li-nomination">
+                <label class="line" for="nomination">Категория:</label>
+                <br>
+                <input class="line" id="nomination" list="nominations" onchange="showForm(event)">
+                <datalist id="nominations">
+                    <option value="frame">Оправа</option>
+                    <option value="lens">Линза</option>
+                    <option value="ready-glasses">Очки</option>
+                    <option value="liquid">Жидкость</option>
+                    <option value="medical-equipment">Мед.оборудование</option>
+                    <option value="other">Другое</option>
+                </datalist>
+            </li>
+        </ul>
+    </div>
+</div>
+<script>
+
+    let fileMap = new Map();
+    let stringifyImgMap = new Map();
+    let form;
+
+    window.onload = () => {
+        el('#menu-btn').addEventListener('click', () => activateMenuListener('spare-insertable', true));
+        // el('#menu-btn').addEventListener('click', () => activateMenuListener(event, 'spare-insertable'));
+        showUnchecked();
+    }
+
+    async function showForm(event){
+        let nominationValue = event.target.value ? event.target.value : document.querySelector('#nomination').value;
+        let liNomination = document.querySelector('#li-nomination').cloneNode(true);
+        let formElem = Object.assign(el('form'), {innerHTML: ''});
+        formElem.appendChild(liNomination);
+        document.querySelector("#nomination").value = nominationValue;
+        let saveBtn = Object.assign(document.createElement('button'), {
+            type: 'button',
+            innerText: 'Сохранить',
+            onclick: () => collectProductData(),
+        });
+        if (event.target.value && event.target.value !== 'none') {
+            let product = '';
+            let promise = await fetch('/shop/products/forms/' + event.target.value);
+            await promise.json().then(emptyForm => {
+                product = emptyForm;
+                form = emptyForm;
+            });
+            let formFields = Object.keys(product).filter(k => !k.includes('Ru') && !k.includes('Str'));
+            for (let key of formFields) {
+                key = key.trim();
+                if (key !== 'nomination') {
+                    let listElem = document.createElement('li');
+                    if (key !== 'pictures') {
+                        let label = Object.assign(document.createElement('label'), {
+                            className: 'line',
+                            for: key,
+                            textContent: `${fieldNamesRu[key] ? fieldNamesRu[key] + ':' : key + ':'}`,
+                            hidden: key === 'id'
+                        });
+                        let input = Object.assign(document.createElement('input'), {
+                            className: 'line',
+                            id: key,
+                            autocomplete: 'off',
+                            value: product[key] ? product[key] : '',
+                            hidden: key === 'id'
+                        });
+                        listElem.append(label, document.createElement('br'), input);
+                        if (key !== 'id') {
+                            let dataList = Object.assign(document.createElement('datalist'), {
+                                id: 'list-of-' + key,
+                                innerHTML: (await getDataListStrOpts(key)),
+                                hidden: key === 'id'
+                            });
+                            input.setAttribute('list', dataList.id);
+                            listElem.appendChild(dataList);
+                        }
+                    } else {
+                        let fileSelector = Object.assign(document.createElement('input'),
+                            {
+                                id: 'file-selector', type: 'file', multiple: 'true', hidden: 'true',
+                                onchange: () => onChange()
+                            });
+                        let openSelector = Object.assign(document.createElement('button'), {
+                            className: 'line', id: 'open-selector', type: 'button', innerText: 'Выбрать файл'
+                        });
+                        let preview = Object.assign(document.createElement('ul'), {className: 'preview'});
+                        openSelector.addEventListener('click', () => {
+                            el('file-selector').click()
+                        });
+                        let buttonsDiv = Object.assign(document.createElement('div'), {style:'display:grid'});
+                        buttonsDiv.append(openSelector, fileSelector, preview);
+                        listElem.appendChild(buttonsDiv);
+                    }
+                    formElem.append(listElem, saveBtn);
+                }
+            }
+        }
+    }
+
+    async function collectProductData(existedProduct, method){
+        let product;
+        if (!existedProduct) {
+            let response = await fetch(`/shop/products/forms/${document.querySelector('#nomination').value}`);
+            await response.json().then(newProduct => product = newProduct);
+        } else {
+            product = existedProduct;
+        }
+        let form = new FormData();
+        for (let inp of Array.from(document.querySelectorAll('#form input'))){
+            if (inp.id !== 'file-selector') {
+                    form.append(inp.id, inp.value);
+                    product[inp.id] = inp.value;
+            }
+            if (inp.id === 'file-selector') {
+                Array.from( fileMap.values() ).forEach( pic => form.append( 'pictures[]', pic ) );
+                product.pictures = [];
+            }
+        }
+        form.append("enctype", "application/json");
+        form.append("product", JSON.stringify(product));
+        fileMap = new Map();
+        sendXHRequest(form, method ? method : 'post');
+    }
+
+    function onChange() {
+        let input = document.querySelector('input[type="file"]');
+        let preview = document.querySelector('.preview');
+        [...input.files].forEach(file => {
+            if (!fileMap.has(file.name.trim())) {
+                const reader = new FileReader;
+                reader.addEventListener('loadend', async () => {
+                    const liElem = document.createElement('li');
+                    const name = document.createElement('p');
+                    name.textContent = file.name;
+                    const image = new Image;
+                    image.src = `data:${file.type};base64,${btoa(reader.result)}`;
+                    const remove = Object.assign(document.createElement('a'), {
+                        href: '#',
+                        innerHTML: '⊗',
+                        onclick: () => {
+                            fileMap.delete(file.name);
+                            liElem.classList.add('removing');
+                            liElem.remove();
+                        }
+                    });
+                    fileMap.set(file.name.trim(), file);
+                    liElem.replaceChildren(remove, image, name);
+                    preview.appendChild(liElem);
+                });
+                reader.readAsBinaryString(file);
+            } else {
+                let message = document.createElement('div');
+                message.textContent = 'Файл уже добавлен!';
+                message.id = 'already-added';
+                setTimeout(() => message.remove(), 3000);
+                document.querySelector('body').appendChild(message);
+            }
+        });
+        input.value = '';
+        const newInput = input.cloneNode(true);
+        input.replaceWith(newInput);
+        input = newInput;
+        input.addEventListener('change', onChange);
+    }
+
+</script>
+
+<script>
+
+    async function getDataListStrOpts(field) {
+        let options = '';
+        let url = '/shop/data/';
+        if (['sp', 'cyl', 'distance', 'price', 'volume'].includes(field)) {
+            url += 'int-list/';
+        } else {
+            url += 'str-list/';
+        }
+        let promise = await fetch(url + field);
+        await promise.json().then(list => list.forEach(str => {
+            str = typeof str === 'string' ? str.trim() : str;
+            let option = `<option value="${str}">${enumsRu[str] ? enumsRu[str] : str}</option>`;
+            options += option;
+        }));
+        return options;
+    }
+
+    async function showSavedProduct(product) {
+        let savedProductView = document.createElement("ul");
+        savedProductView.id = 'form';
+        let form = new FormData();
+        for (let k of Object.keys(product).filter(f =>
+                (product[f] || product[f] === 0) && !f.includes('Ru') && !f.includes('Str'))) {
+            if (k !== 'pictures') {
+                let label = Object.assign(document.createElement('label'), {
+                    for: k,
+                    textContent: (fieldNamesRu[k] ? fieldNamesRu[k] : k)
+                });
+                let dataList = Object.assign(document.createElement('datalist'), {
+                    id: 'list-for-' + k,
+                    innerHTML: (await getDataListStrOpts(k))
+                });
+                let input = Object.assign(document.createElement('input'), {
+                    id: k,
+                    value: (product[k + 'Str'] ? product[k + 'Str'].trim()
+                        : (typeof product[k] === 'string'? product[k].trim() : product[k])),
+                    autocomplete: 'off',
+                    disabled: 'true',
+                });
+                input.setAttribute('list', dataList.id);
+                let br = document.createElement('br');
+                let productField = document.createElement('li');
+                    productField.append(label, br, input, dataList);
+                savedProductView.appendChild(productField);
+            } else {
+                let newPreview = Object.assign(document.createElement('ul'), {className:'preview'});
+                let inputFiles = Object.assign(document.createElement('input'), { id: 'file-selector', type: 'file',
+                        hidden: 'true', onchange: ()=> onChange() });
+                let btnOpenSelector = Object.assign(document.createElement('button'), {
+                    id: 'openSelector', type: 'button', innerText: 'Вставить фото', onclick: () => el('file-selector').click() });
+                [...product[k]].forEach(file => {
+                    let li = document.createElement('li');
+                    stringifyImgMap.set(file.name.trim(), file);
+                    let img = Object.assign(document.createElement('img'), {
+                        className: 'product-img', alt: ('product' + file.name),
+                        src:`data:${file.type};base64,${file.content}`
+                    });
+                    let remove = Object.assign(document.createElement('a'), {
+                        innerHTML: '⊗', href: '#', onclick: () => {
+                            stringifyImgMap.delete(file.name.trim());
+                            li.classList.add('removing');
+                            li.remove();
+                        }
+                    });
+                    let name = Object.assign(document.createElement('p'), {textContent: file.name})
+                    li.replaceChildren(remove, img, name)
+                    newPreview.appendChild(li);
+                });
+                savedProductView.append(inputFiles, btnOpenSelector, newPreview);
+                for (let val of stringifyImgMap.values()) {
+                    form.append("pictures[]", val);
+                }
+            }
+        }
+        let clear = Object.assign(document.createElement('button'), {
+            onclick: window.location='/shop/products/new',
+            innerText: "Новый",
+            type: "button"
+        });
+        let anchorHome = Object.assign(document.createElement('a'), {
+            onclick: window.location='/',
+            innerText: "Домой",
+            type: "button"
+        });
+        let inputUpdate = Object.assign(document.createElement('input'), {
+            type: 'button',
+            value: 'Обновить',
+            onclick: window.location=`/shop/products/renew/${product['id'].trim()}`,
+        });
+        el('form').replaceWith(savedProductView);
+        el('form').append(clear, anchorHome, inputUpdate);
+    }
+
+    function sendXHRequest(form, method) {
+        const xhr = new XMLHttpRequest();
+        let entity;
+        let url = `/shop/products/${method === 'post' ? 'new/' : 'renew'}`;
+        xhr.open(method, url);
+        xhr.send(form);
+        xhr.onerror = error => {
+            console.log("Error on update!" + error.text);
+        };
+        xhr.onreadystatechange = () => {
+            if (xhr.readyState === 4 && xhr.status === 200) {
+                entity = JSON.parse(xhr.response)
+                showSavedProduct(entity);
+            }
+        }
+    }
+
+</script>
+
+<th:block th:insert="~{fragments/commons :: home-btn-and-service-script}"></th:block>
+</body>
+</html>

@@ -1,0 +1,37 @@
+CREATE TABLE IF NOT EXISTS REGIONS
+(
+    Id      CHARACTER(30),
+    Name_En CHARACTER(50),
+    Name_Ru CHARACTER(50),
+    Name_UA CHARACTER(50)
+)
+    TABLESPACE pg_default;
+
+ALTER TABLE IF EXISTS REGIONS
+    OWNER to "Admin";
+
+CREATE TABLE IF NOT EXISTS CITIES
+(
+    Id              CHARACTER(30),
+    Region_Id CHARACTER(30),
+    Name_En         CHARACTER(50),
+    Name_Ru         CHARACTER(50),
+    Name_UA         CHARACTER(50)
+)
+    TABLESPACE pg_default;
+
+ALTER TABLE IF EXISTS CITIES
+    OWNER to "Admin";
+
+CREATE TABLE IF NOT EXISTS STREETS
+(
+    Id      CHARACTER(30),
+    City_Id CHARACTER(30),
+    Name_En CHARACTER(50),
+    Name_Ru CHARACTER(50),
+    Name_UA CHARACTER(50)
+)
+    TABLESPACE pg_default;
+
+ALTER TABLE IF EXISTS STREETS
+    OWNER to "Admin";

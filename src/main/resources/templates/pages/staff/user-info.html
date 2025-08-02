@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <th:block th:insert="~{fragments/commons :: head}"></th:block>
+  <title>Информация о пользователе</title>
+  <style>
+    body{
+      width: 100%;
+      height: 100%;
+    }
+    .main-field{
+      width: 100%;
+      min-height: 100%;
+      height: fit-content;
+      padding: 20px 0 20px 0;
+      justify-items: center;
+    }
+    ol{
+      list-style: none;
+    }
+    .sub-list{
+      background-color: ghostwhite;
+      border-radius: 5px;
+      padding: 20px 20px 0 20px;
+    }
+    .sub-list li {
+      width: max(300px, min(500px, 50vw));
+      background-color: wheat;
+      margin: 5px 5px 10px 5px;
+      padding: 2px 5px 2px 10px;
+      border-radius: 5px;
+    }
+    .sub-list input {
+      font-size: x-small;
+      border-radius: 3px;
+      color: black;
+    }
+    .sub-list input:disabled {
+      color: black;
+      background-color: wheat;
+    }
+
+    .sub-list input:enabled {
+      color: black;
+      background-color: white;
+    }
+
+    .sub-list a, .sub-list u{
+      position: sticky;
+      left: 80%;
+      top: 90%;
+      font-size: x-small;
+      color: blue;
+      cursor: pointer;
+    }
+    .container{
+      width: fit-content;
+      background-color: floralwhite;
+      padding: 20px 60px 20px 5px;
+    }
+
+    .pass-linc{
+      position: relative !important;
+      left: 0 !important;
+      right: 0 !important;
+      font-size: medium !important;
+    }
+    h3{
+      color: cornflowerblue;
+      text-decoration: underline;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+<th:block th:insert="~{fragments/commons :: nav-bar}"></th:block>
+<th:block th:insert="~{fragments/commons :: side-bar}"></th:block>
+
+<div id="mainField" class="main-field">
+  <div id="spare-insertable"></div>
+  <div class="container" th:object="${customer}" id="insertable">
+    <ol>
+      <li>
+        <h3 onclick="flipFlopCustomerInfo('user-info', event)">Пользователь</h3>
+        <ol th:if="${customer.getUser() == null}" class="sub-list"  id="user-info">
+          <li>
+            Id пользователя:
+            <br>
+            <input id="id" disabled th:value="${customer.getId().trim()}"/>
+          </li>
+          <li>
+            Имя пользователя:
+            <br>
+            <input disabled id="login">
+          </li>
+          <li id="setPass">
+            Новый пороль:
+            <br>
+            <input disabled id="password">
+            <input disabled th:unless="${#authorization.expression('hasAnyRole({''ROLE_STAFF'', ''ROLE_SYSADMIN''})')}"
+                   id="confirm">
+          </li>
+          <li>
+            Роль:
+            <br>
+            <select disabled th:style="${#authorization.expression('hasRole(''ROLE_SYSADMIN'')') ? 'display: ' : 'display: none'}" id="role">
+              <option selected value="USER">Пользователь</option>
+              <option value="STAFF">Сотрудник</option>
+              <option value="SYSADMIN">Администратор</option>
+            </select>
+          </li>
+          <br>
+          <u onclick="allowDenyUserInputs(event)">Изменить</u>
+        </ol>
+        <ol th:if="${customer.getUser() != null}" class="sub-list"  id="user-info">
+          <li>
+            Id пользователя:
+            <br>
+            <input id="id" disabled th:value="${customer.id.strip()}"/>
+            <a th:if="${#authorization.expression('hasAnyRole({''ROLE_SYSADMIN'', ''ROLE_STAFF''})')}"
+                  onclick="allowDenyInput(event)">Изменить</a>
+          </li>
+          <li>
+            Имя пользователя:
+            <br>
+            <input style="position: relative; left: 22px;" disabled th:value="${customer.user != null && customer.user.login != null
+                    ? customer.user.login.strip() : ''}" id="login">
+            <a href="#" onclick="allowDenyInput(event)">Изменить</a>
+          </li>
+          <li>
+            <u class="pass-linc" onclick="openNewPassForm(event.target, 'setPass')">Задать новый пароль</u>
+          </li>
+          <li style="display: none;" id="setPass">
+            Новый пороль:
+            <br>
+            <input style="position: relative; left: 22px;" id="password">
+            <a href="#" onclick="allowDenyInput(event)">Изменить</a>
+          </li>
+          <li th:if="${#authorization.expression('hasRole(''ROLE_SYSADMIN'')')}">
+            Роль:
+            <br>
+            <select disabled style="position: relative; left: 22px;"
+                    th:value="${customer.user != null ? customer.user.roles : 'ROLE_USER'}" id="role">
+              <option th:selected="${customer.user != null && customer.user.getRoles() != null
+                      ? customer.user.getRoles().contains('USER') && (!customer.user.getRoles().contains('STAFF')
+                      || !customer.user.getRoles().contains('SYSADMIN')) : true}" value="USER">Пользователь</option>
+              <option value="STAFF">Сотрудник</option>
+              <option value="SYSADMIN">Администратор</option>
+            </select>
+            <a th:if="${#authorization.expression('hasAnyRole({''ROLE_STAFF'', ''ROLE_SYSADMIN''})')}" onclick="allowDenyInput(event)">Изменить</a>
+          </li>
+          <li>
+            Зарегистрирован:
+            <br>
+            <input disabled th:value="${customer.user != null && customer.user.created != null ? customer.user.created.strip() : ''}"/>
+          </li>
+          <li>
+            Был на сайте:
+            <br>
+            <input disabled th:value="${customer.user != null && customer.user.lastVisit != null ? customer.user.lastVisit.strip() : ''}"/>
+          </li>
+          <br>
+        </ol>
+      </li>
+      <li class="customer-info">
+        <h3 onclick="flipFlopCustomerInfo('customer-info', event)">Покупатель:</h3>
+        <ol class="sub-list" id="customer-info">
+          <li>ФИО:
+            <br>
+            <div style="display: inline-flex;">
+              <label for="lName">Фамилия:<br>
+              <input disabled id="lName" th:value="${customer.getLName().strip()}" style="width: max(50px, min(100px, 15vw));"></label>
+              <label for="fName">Имя:<br>
+              <input disabled id="fName" th:value="${customer.getFName().strip()}" style="width: max(50px, min(100px, 15vw));"></label>
+              <label for="fatherName">Отчество:<br>
+              <input disabled id="fatherName" th:value="${customer.getFatherName().strip()}" style="width: max(50px, min(100px, 15vw));"></label>
+            </div>
+            <a href="#" onclick="allowDenyEditName(event)">Изменить</a>
+          </li>
+          <li>Дата рождения:
+            <br>
+            <input style="position: relative; left: 22px;" disabled th:value="${customer.born.strip()}" id="born"/>
+            <a href="#" onclick="allowDenyInput(event)">Изменить</a>
+          </li>
+          <br>
+        </ol>
+      </li>
+      <li class="address-info">
+        <h3 onclick="flipFlopCustomerInfo('address-info', event)">Адресс доставки</h3>
+        <ol class="sub-list" id="address-info">
+          <li>
+            Сервис доставки:
+            <br>
+            <select disabled id="deliveryService" onchange="hideUnusedAddressFields(event)">
+              <option value="Новая Почта">Новая Почта</option>
+              <option value="УкрПочта">УкрПочта</option>
+              <option value="Mist Express">Mist Express</option>
+            </select>
+          </li>
+
+          <li>
+            Тип доставки:
+            <br>
+            <select disabled id="deliveryType" onchange="hideUnusedAddressFields(event)">
+              <option value="В отделение">В отделение</option>
+              <option value="В почтомат">В почтомат</option>
+              <option value="Курьером">Курьером</option>
+            </select>
+          </li>
+
+          <li>
+            Страна:
+            <br>
+            <input disabled id="country" th:value="${customer.getAddress().getCountry() != null ? customer.getAddress().getCountry().strip() : ''}">
+          </li>
+
+          <li>
+            Область:
+            <br>
+            <input disabled th:value="${customer.getAddress().getRegion() != null ? customer.address.region.strip() : ''}" id="region">
+          </li>
+
+          <li>
+            Город/р-н:
+            <br>
+            <input disabled th:value="${customer.getAddress().getCity() != null ? customer.address.city.strip() : ''}" id="city">
+          </li>
+
+          <li>
+            Нас. пункт:
+            <br>
+            <input disabled th:value="${(customer.getAddress().getSettlement() != null && customer.getAddress().getSettlement().strip() != 'null')
+                    ? customer.address.settlement.strip() : ''}" id="settlement">
+          </li>
+
+          <li th:style="${customer.getAddress().getDeliveryType() != null && customer.getAddress().getDeliveryType()?.trim() == 'В отделение' ?
+                   'display:block':'display:none'}" name="deliveryDepartment">
+            Отделение:
+            <br>
+            <input disabled th:value="${customer.getAddress().getDeliveryDepartment() != null
+                    ? customer.address.getDeliveryDepartment()?.strip() : ''}" id="deliveryDepartment">
+          </li>
+          <li th:style="${customer.getAddress().getDeliveryType() != null && customer.getAddress().getDeliveryType()?.trim() == 'В почтомат'
+                  ? 'display: block': 'display: none'}" name="parcelTerminal">
+            Почтомат:
+            <br>
+            <input disabled th:value="${customer.getAddress().getParcelTerminal() != null
+                    ? customer.getAddress().getParcelTerminal().strip() : ''}" id="parcelTerminal">
+          </li>
+
+          <li th:style="${customer.getAddress().getDeliveryType() != null && customer.getAddress().getDeliveryType().trim() == 'Курьером'
+                  ? 'display:block' : 'display: none'}" name="street">
+            Улица:
+            <br>
+            <input disabled th:value="${customer.getAddress().getStreet() != null
+                    ? customer.address.street.strip() : ''}" id="street">
+          </li>
+
+          <li th:style="${customer.getAddress().getDeliveryType() != null && customer.getAddress().getDeliveryType().strip() == 'Курьером'
+                  ? 'dsplay: block' : 'display: none'}" name="apartment">
+            Дом/квартира:
+            <br>
+            <input disabled th:value="${customer.getAddress().getApartment() != null
+                    ? customer.getAddress().getApartment().strip() : ''}" id="apartment">
+          </li>
+
+          <br>
+          <u onclick="allowDenyAddressInputs(event)">Изменить</u>
+        </ol>
+      </li>
+      <li class="contacts-info">
+        <h3 onclick="flipFlopCustomerInfo('contacts-info', event)">Контакты</h3>
+        <ol class="sub-list" id="contacts-info">
+          <li>Email:
+            <br>
+            <input style="position: relative; left: 22px;" disabled th:value="${customer.contact != null && customer.contact.email != null ? customer.contact.email.trim() : ''}" id="email">
+            <u onclick="allowDenyInput(event)">Изменить</u>
+          </li>
+          <li>Моб. телефон:
+            <br>
+            <input style="position: relative; left: 22px;" disabled th:value="${customer.contact != null && customer.contact.phone != null ? customer.contact.phone.trim() : ''}" id="phone">
+            <u onclick="allowDenyInput(event)">Изменить</u>
+          </li>
+          <br>
+        </ol>
+      </li>
+    </ol>
+  </div>
+</div>
+
+<script data-th-inline="javascript">
+  let customer = [[ ${customer} ]];
+  let user = customer.user;
+  let address = customer.address;
+  let contact = customer.contact;
+</script>
+
+<script>
+  console.log("Loaded customer: \n" + JSON.stringify(customer.address));
+
+  window.onload = () => {
+    let delType = document.querySelector('#deliveryType');
+    let options = Array.from(delType.children);
+    delType.options.selectedIndex = options.findIndex(opt => {
+      console.log("Del type value: " + delType.value + ', opt value: ' + opt.value + ' equality: ' + (address.deliveryType ? opt.value === address.deliveryType.trim() : ' no address!'))
+      return address.deliveryType ? opt.value === address.deliveryType.trim() : false;
+    });
+    el('#menu-btn').addEventListener('click', () => activateMenuListener('spare-insertable', true));
+    showUnchecked();
+  }
+
+  function reassignMenuListener(){
+    activateMenuListener('spare-insertable');
+  }
+
+  function openNewPassForm(target, id){
+    document.querySelector('#' + id).style.display = 'block';
+    target.parentElement.style.display = 'none';
+  }
+
+  function hideUnusedAddressFields(e){
+    let allAddressLines = ['street', 'apartment', 'deliveryDepartment', 'parcelTerminal'];
+    allAddressLines.forEach(str => document.querySelector(`li[name=${str}]`).style.display = 'block');
+    let toBeHidden = [];
+    switch (e.target.value){
+      case('Курьером'): {
+        toBeHidden = ['deliveryDepartment', 'parcelTerminal'];
+        break;
+      }
+      case('В отделение'): {
+        toBeHidden = ['street', 'apartment', 'parcelTerminal'];
+        break;
+      }
+      case('В почтомат'): {
+        toBeHidden = ['street', 'apartment', 'deliveryDepartment'];
+        break;
+      }
+    }
+    for (let name of toBeHidden){
+      let e = document.querySelector('li[name=' + name + ']');
+      e.style.display = 'none';
+      document.querySelector('#' + name).value = '';
+    }
+  }
+
+  function allowDenyAddressInputs(e){
+    let olAddress = Array.from(document.querySelectorAll('#address-info input, #address-info select'));
+    if (!olAddress[0].disabled) {
+      saveAddress();
+    }
+    for (let e of olAddress){
+      e.disabled = !e.disabled;
+    }
+  }
+
+  async function allowDenyUserInputs(event){
+      Array.from(document.querySelectorAll('#user-info input')).forEach(e => e.disabled = !e.disabled);
+      let role = document.querySelector('#role');
+      role.disabled = role.style.display === '' ? !role.disabled : true;
+    if (!document.querySelector('#id').disabled){
+      return;
+    }
+    let user = {};
+    user.id = document.querySelector('#id').value;
+    let login = document.querySelector('#login').value;
+    let isFree;
+    let response = await fetch('/shop/data/login/' + login);
+    await response.json().then(data => isFree = data);
+    console.log("loginIsFreeResponse : " + isFree);
+    if (!login || login < 4 || login.match(/\W+/ig)){
+      alert("Логин не введен, или его длина меньше 4, или имеет недопустимые символы!")
+      return;
+    } else if (!isFree) {
+      alert(`Выбранный логин ${login} уже используется!`)
+      return;
+    } else if (document.querySelector('#password').value < 4) {
+      alert("Пароль должен быт длиннее 4 символов!")
+      return;
+    } else if (document.querySelector('#confirm') && document.querySelector('#password').value !== document.querySelector('#confirm').value){
+      alert("Пароли не совпадают!");
+      return;
+    } else {
+      user.login = login;
+      user.pass = document.querySelector('#password').value;
+      user.role = document.querySelector('#role').value;
+    }
+    let form = new FormData;
+    form.append('id', user.id);
+    form.append('login', user.login);
+    form.append('pass', user.pass);
+    form.append('role', user.role);
+    let promise = await fetch('/shop/api/users/customer/add-new', {
+      method: 'POST',
+      headers: {'contentType' : 'application/json'},
+      body: form
+    });
+    if (promise.ok){
+      window.location.reload();
+    }
+  }
+
+  function saveAddress(){
+    let olAddress = Array.from(document.querySelectorAll('#address-info input, #address-info select'));
+    for (let e of olAddress){
+      address[e.id] = e.value;
+    }
+    saveNewAddress();
+    console.log("New address: " + JSON.stringify(address));
+  }
+
+  function allowDenyInput(e){
+    let inp = e.target.previousElementSibling;
+    if (!inp.disabled){
+      if (e.target.id === 'email' || e.target.id === 'phone'){
+        if (checkInput(e.target.id, inp)) {
+          changeCustomerInfo(inp.id, inp.value)
+        }
+      } else {
+        changeCustomerInfo(inp.id, inp.value)
+      }
+    }
+    if (inp.id !== 'password') {
+      inp.disabled = !inp.disabled;
+    } else {
+      let li = inp.parentElement;
+      li.style.display = 'none';
+       li.previousElementSibling.style.display = 'block';
+    }
+  }
+
+  function checkInput(id, value){
+    if (id === 'phone'){
+      if (value.replaceAll(/\D+/ig, '').length === 12){
+        return true;
+      } else {
+        alert('Номер должен содержать 12 цифр!');
+      }
+    } else {
+      if(value.includes("@") && value.split('@')[1].includes(".")){
+        return true;
+      } else {
+        alert('Не верный формат электронного ящика!');
+      }
+    }
+    return false
+  }
+
+  function allowDenyEditName(e){
+    console.log("Start allowDenyEditName()!")
+    const allNames = Array.from(document.querySelectorAll('#lName, #fName, #fatherName'));
+    console.log('New name elems: ' + allNames.length + ' pieces');
+    allNames.forEach(e => e.disabled = !e.disabled);
+    if (allNames[0].disabled){
+      changeCustomerInfo('fullName');
+    }
+  }
+
+  async function updateName(){
+    let [newLName, newFName, newFatherName] = document.querySelector('#lName, #fName, #fatherName').value;
+    let response = await fetch('/shop/api/users/customer/' + document.querySelector('#id').value
+            + `/name-upt/${newLName}/${newFName}/${newFatherName}`, {method: 'PUT'});
+    if (response.ok){
+      await response.json().then(data =>
+      document.querySelector('#fullName').value = data);
+      newLName.value = '';
+      newFName.value = '';
+      newFatherName.value = '';
+    }
+  }
+
+
+  function flipFlopCustomerInfo(id, e){
+    console.log('flipFlopCustomerInfo(): ' + id + ', e.id: ' + e.id);
+    let list = document.querySelector('#' + id);
+    console.log('List disabled: ' + list.style.display);
+    list.style.display = list.style.display === 'none' ? 'block' : 'none';
+    e.target.style.color = e.target.style.color === 'blue' ? 'cornflowerblue' : 'blue';
+  }
+
+  function changeCustomerInfo(objProperty, value){
+    if (objProperty !== 'fullName'){
+      let response = fetch(`/shop/api/users/customer/${customer.id}/renew-prop/${objProperty}/${value}`, {method:'PUT'});
+      if (response.ok){
+        console.log("Response ok!");
+        response.then(data => data.json().then(obj => customer = obj));
+        alert(JSON.stringify(customer));
+        window.location.reload();
+      }
+    } else {
+      let [newLName, newFName, newFatherName] = document.querySelectorAll('#fName, #lName, #fatherName');
+      customer[customer.lName ? 'lName' : 'lname'] = newLName.value;
+      customer[customer.fName ? 'fName' : 'fname'] = newFName.value;
+      customer.fatherName = newFatherName.value;
+      const form = new FormData;
+      form.append('id', customer.id.trim());
+      form.append('newLastName', newLName.value);
+      form.append('newFirstName', newFName.value);
+      form.append('newFatherName', newFatherName.value);
+      let response = fetch(`/shop/api/users/customer/renew-name`, {
+        method: 'PUT',
+        headers: {'ContentType':'application/json'},
+        body: form
+      });
+      if (response.ok){
+        window.location.reload();
+      }
+    }
+    console.log("After update: ", JSON.stringify(customer));
+  }
+
+  function saveNewFieldValue(obj, id, value){
+    let field = obj[id] ? (typeof obj[id] ==='string' ? obj[id].trim() : obj[id]) : (obj[id] !== 0 ? null : 0);
+    if ([0, null].includes(field) || (field && field !== value)) {
+      console.log("Type of obj: " + typeof obj + ' !');
+    }
+  }
+
+  function saveNewAddress(){
+    let form = new FormData;
+    for (let field of Object.keys(address)){
+      let elem = document.querySelector(`#${field}`);
+      form.append(field, (elem.value ? (elem.value.trim()) : null));
+    }
+    form.append('address', address);
+    let response = fetch('/shop/api/users/address/renew/' + customer.id, {
+      method: 'PUT',
+      headers: {'contentType': 'application/json'},
+      body: form
+    });
+    if (response.ok){
+      window.location.reload();
+    }
+  }
+</script>
+
+<th:block th:insert="~{fragments/commons :: home-btn-and-service-script}"></th:block>
+
+</body>
+</html>

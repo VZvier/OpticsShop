@@ -1,0 +1,26 @@
+<!DOCTYPE HTML>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <th:block th:insert="~{fragments/commons :: head}"></th:block>
+    <title>aspect-optics.com</title>
+</head>
+
+<body>
+
+<th:block th:insert="~{fragments/commons :: nav-bar}"></th:block>
+<th:block th:insert="~{fragments/commons :: side-bar}"></th:block>
+
+
+<script>
+
+    window.onload = () => {
+        console.log("Window loaded!")
+        if (top !== window) {
+            top.location = window.location;
+        }
+        window.location.href='/shop/products/page';
+    }
+
+</script>
+</body>
+</html>

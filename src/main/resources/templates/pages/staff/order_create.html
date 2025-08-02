@@ -1,0 +1,790 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <th:block th:insert="~{fragments/commons :: head}"></th:block>
+    <title>Создание заказа</title>
+    <style>
+        body{
+            position: absolute;
+            min-width: 400px;
+            width: 100vw;
+            height: 100vh;
+            overflow-y: scroll;
+            overflow-x: scroll;
+        }
+
+        .main-field{
+            position: absolute;
+            top: 5.1vh;
+            left: 0;
+            right: 4px;
+            height: 100%;
+            background: #f7f3f3;
+            border-radius: 5px;
+            width: fit-content;
+        }
+
+        .selectProduct {
+            position: relative;
+            width: 20vw;
+            min-width: 170px;
+            max-width: 230px;
+            height: 28px;
+            background-color: wheat;
+            border: 2px double black;
+            border-radius: 4px;
+        }
+
+        .content {
+            position: absolute;
+            width: 18vw;
+            min-width: 160px;
+            max-width: 220px;
+            height: 18px;
+            background-color: wheat;
+        }
+
+        .list {
+            position: absolute;
+            top: 20px;
+            width: 20vw;
+            min-width: 170px;
+            max-width: 230px;
+            height: 30vh;
+            min-height: 100px;
+            max-height: 400px;
+            background-color: wheat;
+            z-index: 2;
+        }
+
+        .notArrow {
+            display: inline-flex;
+        }
+
+        .arrow {
+            position: absolute;
+            right: 5px;
+            top: 2px;
+            font-size: medium;
+            cursor: pointer;
+        }
+
+        img {
+            margin: 0 5px 0 0;
+        }
+
+        .order-table{
+            border: 2px double black;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .order-table td, .order-table th{
+            align-items: center;
+            justify-items: center;
+            border: 2px double black;
+        }
+
+        .col {
+            width: 10vw;
+            min-width: 110px;
+            max-width: 290px;
+            height: 50px;
+        }
+
+        .order-table label, .order-table select{
+            display: grid;
+            width: 10vw;
+            min-width: 100px;
+            max-width: 300px;
+        }
+
+        .amount-control {
+            display: inline-flex;
+        }
+
+        .amount-control input {
+            width: 20px;
+            border: 1px double gold;
+        }
+        .amount-control input[type=button]:hover{
+            background-color: gold;
+        }
+
+        .btn-create-order, .btn-create-order:active{
+            position: absolute;
+            background-color: lightgoldenrodyellow;
+            left: 80%;
+            border-radius: 3px;
+            border-color: wheat;
+        }
+
+        .btn-create-order:hover{
+            background-color: gold;
+            border-color: gold;
+            box-shadow: 1px 1px 1px 2px black;
+        }
+
+        .btn-rm-ol, .btn-rm-ol:active{
+            background-color: coral;
+            border-radius: 3px;
+        }
+
+        .btn-rm-ol:hover{
+            color: yellow;
+            background-color: red;
+            border-color: gold;
+            border-radius: 5px;
+            box-shadow: 1px 1px 1px 1px white;
+        }
+        .constr-product{
+            position: relative;
+            margin-right: auto;
+            margin-left: 5px;
+            font-size: x-small;
+        }
+    </style>
+</head>
+<body>
+
+<th:block th:insert="~{fragments/commons :: nav-bar}"></th:block>
+<th:block th:insert="~{fragments/commons :: side-bar}"></th:block>
+<th:block th:insert="~{fragments/commons :: modal-address-form}"></th:block>
+
+
+<div class="main-field" id="mainField">
+    <div id="spare-insertable"></div>
+    <div id="insertable">
+        <div id="assignedCustomerInfo" style="display: none;"></div>
+        <button type="button" style="display:none;" onclick="showHideModal(event)" id="showAddressModal">Изменить адресс доставки</button>
+        <button type="button" onclick="showHideModal(event)" id="showModal">Назначить\изменить покупателя</button>
+        <form id="order-form">
+            <table class="order-table">
+
+                <tr id="line-total">
+                    <td colspan="2" style="align-content: center; text-align: center;">
+                        Total price:
+                    </td>
+                    <td colspan="5" style="align-items: end; text-align: end">
+                        <span id="orderTotal"></span> ₴
+                    </td>
+                </tr>
+
+            </table>
+            <br>
+            <button type="button" onclick="addNewLineToTable()">Добавить строку товара</button>
+            <button type="button" class="btn-create-order" onclick="createOrder()">Создать заказ</button>
+        </form>
+    </div>
+</div>
+
+<th:block th:insert="~{fragments/commons :: home-btn-and-service-script}"></th:block>
+
+<script>
+
+    class OrderLine {
+        amount;
+        productId;
+        constructor(productId, amount) {
+            this.productId = productId;
+            this.amount = amount;
+        }
+        getProductId(){
+            return this.productId;
+        }
+        getAmount(){
+            return this.amount;
+        }
+        setProductId(productId){
+            this.productId = productId;
+        }
+        setAmount(amount){
+            this.amount = amount;
+        }
+        toString(){
+            return JSON.stringify(this);
+        }
+    }
+
+    let products = [];
+
+    window.onload = () => {
+        loadFromStorageIfExists();
+        loadMainFunctions();
+        el('menu-btn').addEventListener('click', () => activateMenuListener('spare-insertable', false));
+        updateTotal();
+        showUnchecked();
+    }
+
+    function loadFromStorageIfExists(){
+        let rowNum = 1;
+        if (storage.getItem('constructors') !== null){
+            constructors = JSON.parse(storage.getItem('constructors'));
+            constructors.forEach(ol => {
+               el('line-total').insertAdjacentElement('beforebegin', makeConstructorOLCode(rowNum, ol));
+               rowNum++;
+            });
+        }
+        if (storage.getItem('orderLines') !== null){
+            orderLines = JSON.parse(storage.getItem('orderLines'));
+            orderLines.forEach(ol => {
+                el('line-total').insertAdjacentElement('beforebegin', makeOrderLineCode(rowNum, ol));
+                rowNum++;
+            });
+        }
+        el('line-total').insertAdjacentElement('beforebegin', makeEmptyOLPattern(rowNum));
+        setNominationsOptions(rowNum);
+    }
+
+    async function setNominationsOptions(rowNumber) {
+        let nominations = [];
+        let promise = await fetch('/shop/data/nominations');
+        await promise.json().then(data => data.forEach(nomination => {
+            let textVal = enumsRu[nomination.trim()] ? enumsRu[nomination.trim()] : nomination.trim();
+            let val = nomination.trim();
+            nominations.push( create( 'option', { value: val, text: textVal } ) );
+        }));
+        setOptions(nominations, 'orderLineNomination' + rowNumber);
+        clearBrandsAndProducts(rowNumber);
+    }
+
+    function clearBrandsAndProducts(rowNumber){
+        el('orderLineBrand' + rowNumber).innerHTML = '<option selected value="none">-Не выбрано-</option>';
+        el('list' + rowNumber).innerHTML = '';
+        el('content' + rowNumber).innerHTML = '';
+    }
+
+    async function setBrandsOptions(target, rowNumber) {
+        if (!target.value || target.value === 'none') {
+            el('orderLineBrand' + rowNumber).innerHTML = '<option selected value="none">-Не выбрано-</option>';
+            return;
+        }
+        let nominationElem = el("orderLineNomination" + rowNumber).value
+        let brands = [];
+        let options = [];
+        allProducts.forEach(p => {
+            let brand = p.brand.trim()
+            if (p.nomination.trim() === nominationElem && !brands.includes(brand)){
+                brands.push(brand);
+                options.push(create('option', {text: brand, value: brand}));
+            }
+        });
+        setOptions(options, 'orderLineBrand' + rowNumber)
+    }
+
+    async function setOLProductSelectOptions(target, rowNumber) {
+        const olNomination = document.querySelector('#orderLineNomination' + rowNumber);
+        const olBrand = document.querySelector('#orderLineBrand' + rowNumber);
+        if (!olNomination.value || !olBrand.value || olNomination.value === 'none' || olBrand.value === 'none') {
+            el('list' + rowNumber).innerHTML = '';
+            products = [];
+            return;
+        }
+        let goods = [];
+        let promise = await fetch('/shop/products/by-nomination-and-brand/' + olNomination.value + '/' + olBrand.value);
+        await promise.json().then(data => data.forEach(product => goods.push(product)));
+        console.log("Got goods: " + goods.length);
+        products = goods;
+        setList(rowNumber);
+    }
+
+    function setOptions(options, id) {
+        let element = el(id);
+        for (let o of options) {
+            element.appendChild(o);
+        }
+    }
+
+    function setList(rowNumber) {
+        let list = el('list' + rowNumber );
+        list.innerHTML = '';
+        list.style.display = list.style.display === 'none' ? 'block' : 'none';
+        for (let unit of products) {
+            let pic = (unit?.pictures !== null && unit.pictures.length > 0) ? unit.pictures[0] : null;
+            let text = `<hr><div class="xsm" onclick="setToParent(this, '#divProductInfo', ${rowNumber}, ${unit.price})" id=${unit.id.trim()}>
+                    <img style="float:left; width: 50px; object-fit: contain;"
+                        src="${!pic ? '/no-image.png' : 'data:' + pic.type.trim() + ';base64,' + pic.content}"
+                        alt="${!pic ? 'no-image' + unit.id.trim() : pic.id.trim() + pic.name.trim()}">
+                    ${enumsRu[unit.nomination.trim()] ? enumsRu[unit.nomination.trim()] : unit.nomination.trim()}.
+                    Брэнд: ${unit.brand.trim()}, `;
+            switch (unit.nomination.trim()) {
+                case ('lens') : {
+                    text += `Линза: ${enumsRu[unit.lensType.trim()] ? enumsRu[unit.lensType.trim()] : unit.lensType.trim()}.
+                        Страна: ${unit.countryRu ? unit.countryRu.trim() : unit.country.trim()}.
+                        coeff: ${unit.coefficient.trim()}. sp: ${unit.sp.trim()}. cyl: ${unit.cyl.trim()}, ${unit.price.trim()} ₴.`;
+                    break;
+                }
+                case ('frame') : {
+                    text += `${unit.model.trim()}. Тип оправы: ${enumsRu[unit.frameType.trim()] ? enumsRu[unit.frameType.trim()] : unit.frameType.trim()}.
+                        Размер: ${enumsRu[unit.frameSize.trim()] ? enumsRu[unit.frameSize.trim()] : unit.frameSize.trim()}.
+                        Пол: ${enumsRu[unit.gender.trim()] ? enumsRu[unit.gender.trim()] : unit.gender.trim()}, ${unit.price.trim()} ₴.`
+                    break;
+                }
+                case ('ready-glasses') : {
+                    text += `${unit.model.trim()}. Тип оправы: ${enumsRu[unit.frameType.trim()] ? enumsRu[unit.frameType.trim()] : unit.frameType.trim()}.
+                        Размер: ${enumsRu[unit.frameSize.trim()] ? enumsRu[unit.frameSize.trim()]: unit.frameSize.trim()}.
+                        Пол: ${enumsRu[unit.gender.trim()] ? enumsRu[unit.gender.trim()] : unit.gender.trim()}.
+                        Линзы: ${enumsRu[unit.lensType.trim()] ? enumsRu[unit.lensType.trim()] : unit.lensType.trim()}.
+                        sp: ${unit.sp.trim()}. ${unit.cyl ? 'cyl:' + unit.cyl.trim() + '.' : ''}, расстояние: ${unit.distance}мм, ${unit.price.trim()} ₴.`;
+                    break;
+                }
+                case ('liquid') : {
+                    text += `Обьем: ${unit.volume}, ${unit.price.trim()} ₴.`;
+                    break;
+                }
+                case ('medical-equipment') : {
+                    text += `Модель: ${unit.model.trim()}, ${unit.price.trim()} ₴.`;
+                    break;
+                }
+                default : {
+                    break;
+                }
+            }
+            text += '</div>';
+            list.innerHTML += text;
+        }
+    }
+
+    function setToParent(target, destinationElemId, rowNumber, pPrice) {
+        if (checkIsAdded(target.id)) {
+            alert("Товар уже добавлен! Id:" + target.id);
+            return;
+        }
+        let div = el(target.id).cloneNode(true);
+        div.onclick = '';
+        div.id = '';
+        Object.assign(el(destinationElemId + (rowNumber ? rowNumber : '')), {innerHTML: div.innerHTML, className: "xsm"});
+        switch (destinationElemId) {
+            case ('#divProductInfo') : {
+                el('content' + rowNumber).innerHTML = div.innerHTML;
+                el('productId' + rowNumber).value = target.id;
+                el('productPrice' + rowNumber).value = pPrice;
+                el('list' + rowNumber).style.display = 'none';
+                el('oLProductSelected' + rowNumber).style.display = 'block';
+                el('oLProductAmount' + rowNumber).firstElementChild.style.display = 'inline-flex';
+                el('content' + rowNumber).innerText = target.id;
+                orderLines.push(new OrderLine(target.id, 1));
+                storage.setItem('orderLines', JSON.stringify(orderLines));
+                setTotalPrices();
+                break;
+            }
+            case ('#customerHolder') : {
+                el('orderCustomerId').value = target.id;
+                el('customerList').style.display = 'none';
+                el('assignedCustomerInfo').innerHTML =
+                    '<h3 style="margin-block-end: 10px; margin-block-start: 10px;">Заказчик: </h3><br>' + div.innerHTML;
+                el('assignedCustomerInfo').style.display = 'block';
+                el('showAddressModal').style.display = 'block'
+                break;
+            }
+        }
+    }
+
+    function makeSuggestions(target){
+        console.log("Onchange")
+        if (!target.value || target.value?.length < 3) {
+            return;
+        } else {
+            makeCustomerDataSuggestions(target);
+            makeCustomersSuggestions(target.value);
+        }
+    }
+
+    async function makeCustomerDataSuggestions(target){
+        console.log("Oninput");
+        let dataList = el('userSearchSuggestions');
+        dataList.innerHTML = '';
+        console.log("User search TagName: " + target.tagName + ', id:' + target.id + ', inp val: ' + target.value);
+        const url = '/shop/data/customers/search/' + target.value;
+        let response = await fetch( url ).catch(error => console.warn("Fetch failed " + error.message));
+        if (response.ok) {
+            await response.json().then(data => data.forEach(str => {
+                console.log("Data search return str: " + str);
+                dataList.appendChild(Object.assign(document.createElement('option'), {
+                    value: str.trim(),
+                    textContent: str.trim()
+                }));
+            }));
+        } else {
+            console.error('Maybe wrong url \'' + url + "'! Please check it!");
+        }
+    }
+
+    async function makeCustomersSuggestions(elemValue){
+        let customerList = el('customerList');
+        let promise = await fetch('/shop/api/users/search/' + elemValue);
+        let listHtml = '<h3 style="margin: 5px 5px 5px 5px;">Выберите пользователя</h3>';
+        await promise.json().then(data => data.forEach(c => {
+            let address = toStringAddress(c.address);
+            let text = `Id: '${c.id.trim()}'; Логин: '${c.user.login?.trim()}'; ФИО: ${c.lname?.trim() + ' '
+                    + c.fname?.trim() + ' ' + c.fatherName?.trim()}; Тел: ${c.contact.phone?.trim()}`
+                    + `; Email: '${c.contact.email?.trim()}'. Адресс покупателя: ${address}`;
+            let div = `<hr><div onclick="setCustomer(this, '#customerHolder', ${address})" id="${c.id.trim()}">${text}</div><br>`;
+            listHtml += div;
+        }));
+        customerList.innerHTML = listHtml;
+    }
+
+    function setCustomer(target, id, address){
+        setToParent(target, id);
+        deliveryAddress = address;
+        showAddress();
+    }
+
+    async function showCustomerList(target){
+        if (!target.value) return;
+        let customerList = el('customerList');
+        if (customerList.children.length < 2 ) return;
+        customerList.style.display = 'block';
+    }
+
+    function showHideProductList(number){
+        let list = el('list' + number);
+        list.style.display = list.style.display === 'none' ? 'block' : 'none';
+    }
+
+    function addNewLineToTable(){
+        let tableRows = Array.from(document.querySelectorAll('.order-table tr'));
+        let tableRowsAmount = tableRows.length;
+        el('line-total').insertAdjacentElement('beforebegin', makeEmptyOLPattern(tableRowsAmount));
+        setNominationsOptions(tableRowsAmount);
+    }
+
+    function makeEmptyOLPattern(rowNumber){
+        let oLRowHtml = `<tr id="orderLine${rowNumber}">
+                <td class="col">
+                    <input hidden class="rowNum" value="${rowNumber}" name="productId">
+                    <input hidden id="productId${rowNumber}" name="productId">
+                    <input hidden id="productPrice${rowNumber}" onchange="setTotalPrices()">
+                    <label for="orderLineNomination${rowNumber}">Наимеование: </label>
+                    <select id="orderLineNomination${rowNumber}" onchange="setBrandsOptions(this, ${rowNumber})">
+                        <option selected value="none">-Не выбрано-</option>
+                    </select>
+                </td>
+                <td class="col">
+                    <label for="orderLineBrand${rowNumber}">Производитель: </label>
+                    <select id="orderLineBrand${rowNumber}" onchange="setOLProductSelectOptions(this, ${rowNumber})">
+                        <option selected value="none">-Не Выбрано-</option>
+                    </select>
+                </td>
+                <td class="col">
+                    <label for="oLProductSelect${rowNumber}" style="width: 150px;">Выберите продукт: </label>
+                    <div class="selectProduct" id="select${rowNumber}">
+                        <div class="content" id="content${rowNumber}">-Не выбрано-</div>
+                        <div class="list" id="list${rowNumber}" style="display: none;"></div>
+                        <span class="notArrow" id="notArrow${rowNumber}"><span onclick="javascript:showHideProductList(${rowNumber})" class="arrow">&#9660;</span></span>
+                    </div>
+                </td>
+                <td class="col">
+                    <div id="oLProductSelected${rowNumber}" style="position:relative; display: none;">
+                        <div id="divProductInfo${rowNumber}"></div>
+                    </div>
+                </td>
+                <td class="col" id="oLProductAmount${rowNumber}" style="text-align: center">
+                    <div class="amount-control" style="display: none;">
+                        <input type="button" onclick="changeAmount(this)" class="reduce-button"
+                                style="border-start-start-radius: 3px; border-end-start-radius: 3px;
+                                border-inline-end: none;" value="-"/>
+                        <input class="product-amount" disabled id="amount${rowNumber}"
+                                style="border-inline-start: none; border-inline-end: none;" value="1"/>
+                        <input type="button" onclick="changeAmount(this)" class="increase-button"
+                                style="border-end-end-radius: 3px; border-start-end-radius: 3px;
+                                border-inline-start: none;" value="+"/>
+                    </div>
+                </td>
+                <td class="col" id="olTotal${rowNumber}" style="text-align: center;">
+                    <span class="pTotal style="display: none;" id="pTotal${rowNumber}"></span> ₴
+                </td>
+                <td class="col" style="text-align: center;">
+                    <button class="btn-rm-ol" type="button" id="delete${rowNumber}" onclick="deleteLine(${rowNumber})">Удалить</button>
+                </td>
+            </tr>
+            `;
+        return Object.assign(document.createElement('tr'), {id:'orderLine' + rowNumber, innerHTML: oLRowHtml});
+    }
+
+    function makeOrderLineCode(rowNumber, orderLine){
+        let product = allProducts.find(p => p.id.trim() === orderLine.productId.trim());
+        if (!product){
+            return;
+        }
+        let priceInt = +(product['price'].replace(/\D+/, ''));
+        let pic = product.pictures ? product.pictures[0] : null;
+        let productText = `<div id=${product.id.trim()}>
+                <img style="float:left; width: 50px; object-fit: contain;"
+                    src="${!pic ? '/no-image.png' : 'data:' + pic.type.trim() + ';base64,' + pic.content}"
+                alt="${!pic ? 'no-image' + product.id.trim() : pic.id.trim() + pic.name.trim()}">
+                ${enumsRu[product.nomination.trim()] ? enumsRu[product.nomination.trim()] : product.nomination.trim()}.
+                Брэнд: ${product.brand}. ${product?.model ? 'Модель: ' + product.model.trim() + ', ': ''}
+                ${product.sp ? 'sp: ' + product.sp.trim() + ', ' : ''}${product.cyl ? 'cyl: '+ product.cyl.trim() + ', ' :''}
+                ${product.volume ? 'Объем: ' + product.volume + 'мл. ' : ''}Цена: ${product.price} ₴.`;
+        let oLRowHtml = `<tr id="orderLine${rowNumber}">
+                <td class="col">
+                    <input hidden class="rowNum" value="${rowNumber}">
+                    <input hidden id="productId${rowNumber}" name="productId" value="${product.id}">
+                    <input hidden id="productPrice${rowNumber}" onchange="setTotalPrices()" value="${product.price}">
+                    <label for="orderLineNomination${rowNumber}">Наимеование: </label>
+                    <select id="orderLineNomination${rowNumber}" onchange="setBrandsOptions(this, ${rowNumber})">
+                        <option selected value="none">-Не выбрано-</option>
+                        ${createOlSelectElOptions('nomination', product['nomination'].trim())}
+                    </select>
+                </td>
+                <td class="col">
+                    <label for="orderLineBrand${rowNumber}">Брэнд: </label>
+                    <select id="orderLineBrand${rowNumber}" onchange="setOLProductSelectOptions(this, ${rowNumber})">
+                        <option selected value="none">-Не Выбрано-</option>
+                        ${createOlSelectElOptions('brand', product['brand'].trim())}
+                    </select>
+                </td>
+                <td class="col">
+                    <label for="oLProductSelect${rowNumber}" style="width: 150px;">Выберите продукт: </label>
+                    <div class="selectProduct" id="select${rowNumber}">
+                        <div class="content" id="content${rowNumber}">${product.id}</div>
+                        <div class="list" id="list${rowNumber}" style="display: none;">${productText}</div>
+                        <span class="notArrow" id="notArrow${rowNumber}"><span onclick="showHideProductList(${rowNumber})" class="arrow">&#9660;</span></span>
+                    </div>
+                </td>
+                <td class="col">
+                    <div id="oLProductSelected${rowNumber}" style="position:relative;">
+                        <div id="divProductInfo${rowNumber}">${productText}</div>
+                    </div>
+                </td>
+                <td class="col" id="oLProductAmount${rowNumber}" style="text-align: center;">
+                    <div class="amount-control">
+                        <input type="button" onclick="changeAmount(this, ${rowNumber})" class="reduce-button"
+                                style="border-start-start-radius: 3px; border-end-start-radius: 3px;
+                                border-inline-end: none;" value="-"/>
+                        <input class="product-amount" disabled id="amount${rowNumber}"
+                                style="border-inline-start: none; border-inline-end: none;" value="${orderLine.amount}"/>
+                        <input type="button" onclick="changeAmount(this, ${rowNumber})" class="increase-button"
+                                style="border-end-end-radius: 3px; border-start-end-radius: 3px;
+                                border-inline-start: none;" value="+"/>
+                    </div>
+                </td>
+                <td class="col" id="olTotal${rowNumber}" style="text-align: center;">
+                    <span class="pTotal" id="pTotal${rowNumber}">${((+priceInt * orderLine.amount) + '').set(-2, ',')}</span> ₴
+                </td>
+                <td class="col" style="text-align: center;">
+                    <button class="btn-rm-ol" type="button" id="delete${rowNumber}" onclick="deleteLine(${rowNumber})">Удалить</button>
+                </td>
+            </tr>
+            `;
+        return create('tr', {id:'orderLine' + rowNumber, innerHTML: oLRowHtml, className: 'product'});
+    }
+
+    function makeConstructorOLCode(rowNum, constructor){
+        let frame = allProducts.find(p => p.id.trim() === constructor.frame.trim());
+        let od = allProducts.find(p => p.id.trim() === constructor.odLens.trim());
+        let os = allProducts.find(p => p.id.trim() === constructor.osLens.trim());
+        let frameImg = `<img style="float: left; width: 50px; object-fit: contain;"
+                src="${frame.pictures ? 'data:' + frame.pictures[0].type.trim() + ';base64,' + frame.pictures[0].content
+                    : '/no-image.png'}" alt="${frame.pictures ? frame.pictures[0].name.trim() + rowNum : 'no-image' + rowNum}">`;
+        let odImg = `<img style="float:left; width: 50px; object-fit: contain;"
+                src="${od.pictures ? 'data:' + od.pictures[0].type.trim() + ';base64,' + od.pictures[0].content
+                    : '/no-image.png'}" alt="${od.pictures ? od.pictures[0].name.trim() + rowNum : 'no-image' + rowNum}">`;
+        let osImg = `<img style="float:left; width: 50px; object-fit: contain;"
+                src="${os.pictures ? 'data:' + os.pictures[0].type.trim() + ';base64,' + os.pictures[0].content : '/no-image.png'}"
+                alt="${os.pictures ? os.pictures[0].name.trim() + rowNum : 'no-image' + rowNum}">`;
+        let result = `
+                <td class="col">
+                    <input hidden value="${constructor.frame}" name="frame">
+                    <input hidden value="${constructor.odLens}" name="odLens">
+                    <input hidden value="${constructor.osLens}" name="osLens">
+                    <input hidden class="rowNum" value="${rowNum}">
+                    <input hidden id="productPrice${rowNum}" onchange="setTotalPrices()" value="${constructor.total}">
+                    <label class="xsm">Наименование: </label><br>
+                    <label for="orderLineNomination${rowNum}" style="font-size: medium;">Конструктор очков</label>
+                </td>
+                <td class="col">
+                    <label for="oLProductSelect${rowNum}" style="width: 150px;">Опрва (id): </label>
+                    <div class="selectProduct" id="select${rowNum}">
+                        <div class="content" id="content${rowNum}">${frame.id}</div>
+                    </div>
+                    <label for="oLProductSelect${rowNum}" style="width: 150px;">OD (правая линза (id)): </label>
+                    <div class="selectProduct" id="select${rowNum}">
+                        <div class="content" id="content${rowNum}">${od.id}</div>
+                    </div>
+                    <label for="oLProductSelect${rowNum}" style="width: 150px;">OS (левая линза (id)): </label>
+                    <div class="selectProduct" id="select${rowNum}">
+                        <div class="content" id="content${rowNum}">${os.id}</div>
+                    </div>
+                </td>
+
+                <td class="col">
+                    <div id="selectedFrame${rowNum}" class="constr-product">
+                        <div class="sm" id="divFrameInfo${rowNum}">${frameImg}Оправа: ${frame.brand.trim()}, ${frame.model.trim()}, ${frame.price.trim()} ₴.</div>
+                    </div>
+                    <hr>
+                    <div id="selectedODLens${rowNum}" class="constr-product">
+                        <div class="sm" id="divOSLensInfo${rowNum}">${frameImg}OD линза: ${od.brand}, sp:${od.sp}, cyl:${od.cyl}, ${constructor.odAngle ? constructor.odAngle + '&deg;, ' : ''}${od.price} ₴.</div>
+                    </div>
+                    <hr>
+                    <div id="selectedOSLens${rowNum}" class="constr-product">
+                        <div class="sm" id="divOSLensInfo${rowNum}">${frameImg}OS линза: ${os.brand}, sp:${os.sp}, cyl:${os.cyl}, ${constructor.osAngle ? constructor.osAngle + '&deg;, ' : ''}${os.price} ₴.</div>
+                    </div>
+                </td>
+                <td>
+                    <div class="xsm">Расстояние:</div>
+                    <div class="sm">${constructor.distance} мм</div>
+                    <div class="xsm">Цена:</div>
+                    <div class="sm">${constructor.total} ₴</div>
+                </td>
+                <td class="col" id="oLProductAmount${rowNum}" style="text-align: center;">
+                    <div class="amount-control">
+                        <input type="button" onclick="changeAmount(this, ${rowNum})" class="reduce-button"
+                                style="border-start-start-radius: 3px; border-end-start-radius: 3px;
+                                border-inline-end: none;" value="-"/>
+                        <input class="product-amount" disabled id="amount${rowNum}"
+                                style="border-inline-start: none; border-inline-end: none;" value="${constructor.amount}"/>
+                        <input type="button" onclick="changeAmount(this, ${rowNum})" class="increase-button"
+                                style="border-end-end-radius: 3px; border-start-end-radius: 3px;
+                                border-inline-start: none;" value="+"/>
+                    </div>
+                </td>
+                <td class="col" id="olTotal${rowNum}" style="text-align: center;">
+                    <span class="pTotal" id="pTotal${rowNum}">${+constructor.total.match(/\d+/).toString() * constructor.amount + ',00'}</span> ₴
+                </td>
+                <td class="col" style="text-align: center;">
+                    <button class="btn-rm-ol" type="button" id="delete${rowNum}" onclick="deleteLine(${rowNum})">Удалить</button>
+                </td>
+        `;
+        return create('tr', {id: 'orderLine' + rowNum, innerHTML: result, className: 'constructor'});
+    }
+
+    function createOlSelectElOptions(fieldName, selected){
+        let array = [];
+        allProducts.forEach(p => {
+            if (!array.includes(p[fieldName].trim())){
+                array.push(p[fieldName].trim());
+            }
+        });
+        return array.map(n => `<option ${n === selected ? 'selected' : ''}
+                value="n">${enumsRu[n] ? enumsRu[n] : n}</option>`);
+    }
+
+    function deleteLine(rowNum){
+        let productId = el('productId' + rowNum)?.value;
+        if (productId) {
+            orderLines = orderLines.filter(ol => ol.productId.trim() !== productId.trim());
+            storage.setItem('orderLines', JSON.stringify( orderLines ));
+        } else {
+            constructors = constructors.splice(rowNum - 1, 1);
+            storage.setItem('constructors', JSON.stringify( constructors ));
+        }
+        el('orderLine' + rowNum).remove();
+    }
+
+    function changeAmount(target, rowNum){
+        let row = target.closest('tr');
+        let productAmount;
+        if (!rowNum){
+            rowNum = +row.querySelector('input[name="productId"]').value;
+        }
+        if (target.className === 'reduce-button') {
+            productAmount = target.nextElementSibling;
+            if (+productAmount.value > 1)
+                productAmount.value = +productAmount.value - 1;
+        }
+        if (target.className === 'increase-button') {
+            productAmount = target.previousElementSibling;
+            productAmount.value = +productAmount.value + 1;
+        }
+        if (rowNum && row.className === 'constructor'){
+            constructors = constructors.map(c => {
+               if (constructors.indexOf(c) === rowNum - 1){
+                   c.amount = +productAmount.value;
+               }
+               return c;
+            });
+            storage.setItem('constructors', JSON.stringify(constructors));
+        } else {
+            orderLines = orderLines.map(ol => {
+                if (ol.productId.trim() === row.querySelector('#productId' + rowNum).value.trim()){
+                    ol.amount = +productAmount.value;
+                }
+                return ol;
+            });
+            storage.setItem('orderLines', JSON.stringify(orderLines));
+        }
+        setTotalPrices();
+    }
+
+    function setTotalPrices(){
+        let rowNumberInputs = Array.from(document.querySelectorAll('.rowNum'));
+        console.log("RowNumberInputs: " + rowNumberInputs.length);
+        let oTotal = 0;
+        for (let inElem of rowNumberInputs){
+            let row = +inElem.value;
+            if ( el('productPrice' + row).value  && el('productPrice' + row).value !== '') {
+                console.log("Price from input: " + el('productPrice' + row).value);
+                let price = +el('productPrice' + row).value.match(/\d+/).toString()
+                let amount = +el('amount' + row).value;
+                let olTotal = price * amount;
+                console.log('OL Total: ' + olTotal + ', price: ' + price + ', Amount: ' + amount + ',00');
+                console.log("OrderLine total: " + olTotal + ',00');
+                oTotal += olTotal !== 0 && olTotal !== null ? olTotal : 0;
+                el('pTotal' + row).innerHTML = olTotal + ',00';
+            }
+        }
+        console.log("Order total: " + oTotal);
+        el('orderTotal').innerHTML = oTotal + ',00';
+    }
+
+    function checkIsAdded(newProductId){
+        let allProdIdInputs = Array.from(document.querySelectorAll('input[name="productId"]'));
+        for(let inp of allProdIdInputs){
+            if (inp.value === newProductId){
+                console.log("Input val: " + inp.value + ", New productId: " + newProductId);
+                return true;
+            }
+        }
+        return false;
+    }
+
+    async function createOrder(){
+        let customer = document.querySelector('#orderCustomerId').value;
+        if (!customer){
+            document.querySelector('#showModal').click();
+            return;
+        }
+        if (!deliveryAddress){
+            document.querySelector('#showAddressModal').click();
+            return;
+        }
+        let form = new FormData;
+        form.append('address', JSON.stringify(deliveryAddress));
+        form.append('constructors[]', JSON.stringify(constructors));
+        form.append('orderLines[]', JSON.stringify(orderLines));
+        form.append('customerId', document.querySelector('#orderCustomerId').value);
+        let response = await fetch('/shop/orders/new', {
+            method: 'POST',
+            headers: {'contentType': 'application/json'},
+            body: form
+        }).catch(e => alert(e));
+        if (response.ok){
+            let id = '';
+            await response.text().then(data => id = data);
+            console.log('Response id: ' + id);
+            if (id) {
+                return window.location = '/shop/orders/by_id/' + id;
+            } else {
+                alert('Id not found!');
+            }
+        }
+    }
+
+    function updateTotal(){
+        let elementsArray = Array.from(document.querySelectorAll('.pTotal'))
+        let total = 0;
+        for(let elem of elementsArray){
+            let text = elem.textContent;
+            if (text){
+                total += +extractIntValue(elem.textContent);
+            }
+        }
+        document.querySelector('#orderTotal').innerHTML = (total + '').set(-2, ',');
+    }
+</script>
+
+</body>
+</html>

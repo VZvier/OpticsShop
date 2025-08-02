@@ -1,0 +1,14 @@
+spring:
+  config:
+    activate:
+      on-profile: test
+  flyway:
+    locations: classpath:/db/test-migrations
+  datasource:
+    driver-class-name: org.testcontainers.jdbc.ContainerDatabaseDriver
+    url: jdbc:tc:postgresql:16.0:///test?currentSchema=bdoptica&TC_REUSABLE=true
+    username: root
+    password: test
+    hikari:
+      minimum-idle: 1
+      maximum-pool-size: 5
