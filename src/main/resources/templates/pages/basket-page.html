@@ -457,47 +457,6 @@
         }
     }
 
-    // TODO: absolutely working method saveOrder()
-    // function saveOrder(){
-    //     const xhr = new XMLHttpRequest();
-    //     let form = new FormData();
-    //     form.append('orderLines[]', JSON.stringify(orderLines));
-    //     form.append("enctype", "application/json");
-    //     xhr.open('post', '/shop/orders/new');
-    //     xhr.send(form);
-    // }
-    //
-    // TODO: absolutely working method saveOrder()2
-    // async function saveOrder1() {
-    //     if (deliveryAddress) {
-    //         const xhr = new XMLHttpRequest();
-    //         let form = new FormData();
-    //         form.append('orderLines[]', JSON.stringify(orderLines));
-    //         form.append("enctype", "application/json");
-    //         form.append('address', deliveryAddress);
-    //         xhr.open('post', '/shop/orders/new');
-    //         let order;
-    //         let user;
-    //         let promise = await fetch("/shop/api/users/auth-customer/info");
-    //         await promise.json().then(response => user = response);
-    //         xhr.send(form);
-    //         xhr.onreadystatechange = () => {
-    //             if (xhr.readyState === 4 && xhr.status === 200){
-    //                 order = JSON.parse(xhr.response);
-    //                 console.log('Order: ' + order + ' Id: ' + order['id'] + "  " + order.id);
-    //                 setTimeout(() => alert(`Спасибо за заказ!\nНомер Заказа: ${order.id}`), 100);
-    //                 return window.location=`/shop/orders/page/${user.id? user.id : ''}?orderId=${order.id}`;
-    //             }
-    //         }
-    //     } else {
-    //         let role = [[${#authorization.expression('hasRole("ROLE_ANONYMOUS")')}]];
-    //         storage.setItem('orderLines', JSON.stringify(orderLines));
-    //         storage.setItem('positionToReturn', '/shop/orders/basket/page');
-    //         return window.location = (role ? '/shop/api/users/login' : '/shop/api/users/address/page');
-    //     }
-    // }
-
-    // Save Order through fetch()
      async function saveOrder(){
         if (deliveryAddress){
             let form = new FormData;

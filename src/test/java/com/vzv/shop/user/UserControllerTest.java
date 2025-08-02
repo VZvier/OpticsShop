@@ -922,7 +922,6 @@ class UserControllerTest {
         });
 
         assertEquals(expectedStatus, actualStatus);
-//        TODO: testCreateUserWithStaff()
         assertEquals(expectedResult, actualResult);
     }
 
@@ -977,7 +976,6 @@ class UserControllerTest {
         });
 
         assertEquals(expectedStatus, actualStatus);
-//        TODO: testCreateUserWithSysadmin()!
         assertEquals(expectedResult, actualResult);
 
     }
@@ -1017,7 +1015,6 @@ class UserControllerTest {
         when(userService.reformatEmail(anyString())).thenReturn(customer.getContact().getEmail());
         when(userService.saveCustomer(any())).thenReturn(customer);
         when(userService.getCustomerById(anyString())).thenReturn(customer);
-//        try (MockedStatic<RandomStringUtils> mockStrUtils = mockStatic(RandomStringUtils.class)){
         mockAuxUtils.when(() -> AuxiliaryUtils.makeRandomString(12)).thenReturn(autoGenPass);
 
         MvcResult mvcResult = mvc.perform(mockReq)
@@ -1033,7 +1030,6 @@ class UserControllerTest {
         });
 
         assertEquals(expectedStatus, actualStatus);
-//        TODO: testCreateUserWithAllRoles!
         assertEquals(expectedResult, actualResult);
     }
 
