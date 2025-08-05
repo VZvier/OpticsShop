@@ -143,7 +143,7 @@
       for (let order of orders) {
         orderLinesAmount = order.orderLines.length + order.constructors.length;
         orderHtml += `
-        <tr class="order" id="${order.id.trim()}" onclick="showMoreOrderInfo(this.closest('tr'), this)">
+        <tr class="order" id="${order.id.trim()}" onclick="showMoreOrderInfo(this.closest('tr'))">
           <td style="font-size: x-small;">Код заказа: <br>${order.id.trim()}</td>
           <td class="cr-info">
             <span class="xsm">Id пользователя: </span><br class="xsm"><span class="xsm">${order.customer.user.id.trim()}</span><br class="xsm"><hr class="xsm">
@@ -233,10 +233,10 @@
       let hidden = elems.find(e => e.style.display === 'none');
       if (hidden) {
         elems.forEach(e => e.style.display = '');
-        el('.ordered-amount').style.display = 'none';
+        row.querySelector('.ordered-amount').style.display = 'none';
       } else {
         elems.forEach(e => e.style.display = 'none');
-        el('.ordered-amount').style.display = '';
+        row.querySelector('.ordered-amount').style.display = '';
       }
   }
 

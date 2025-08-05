@@ -140,6 +140,7 @@
         if (top !== window){
             top.location = window.location;
         }
+        loadMainFunctions();
         document.querySelector('#sideMenu').addEventListener('selectstart', event => { event.preventDefault() });
         document.querySelector('.nav-bar').addEventListener('selectstart', event => { event.preventDefault() });
         document.querySelector('.pTotal').innerText = document.querySelector('.pPrice').textContent;
@@ -155,10 +156,6 @@
                     el('product-images').style.backgroundSize = 'contain';
                 })
             }
-        }
-        if (![null, 'undefined', '[]'].includes(storage.getItem('orderLines'))) {
-            orderLines = JSON.parse(storage.getItem('orderLines'));
-            showOLCount();
         }
         if(storage.getItem('allProducts')){
             allProducts = JSON.parse(storage.getItem('allProducts'));

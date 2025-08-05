@@ -308,10 +308,9 @@ class UserMvcControllerTest {
 
         when(userService.getCustomerById(anyString())).thenReturn(customer);
 
-        mvc.perform(MockMvcRequestBuilders.get(URL + "renew/customer"))
-
+        mvc.perform(MockMvcRequestBuilders.get(URL + "renew/customer/" + customer.getId()))
                 .andExpect(MockMvcResultMatchers.status().isOk())
-                .andExpect(MockMvcResultMatchers.view().name("pages/registration"))
+                .andExpect(MockMvcResultMatchers.view().name("pages/staff/user-info"))
                 .andReturn();
     }
 
@@ -322,10 +321,9 @@ class UserMvcControllerTest {
 
         when(userService.getCustomerById(anyString())).thenReturn(customer);
 
-        mvc.perform(MockMvcRequestBuilders.get(URL + "renew/customer"))
-
+        mvc.perform(MockMvcRequestBuilders.get(URL + "renew/customer/" + customer.getId()))
                 .andExpect(MockMvcResultMatchers.status().isOk())
-                .andExpect(MockMvcResultMatchers.view().name("pages/registration"))
+                .andExpect(MockMvcResultMatchers.view().name("pages/staff/user-info"))
                 .andReturn();
     }
 
@@ -335,11 +333,10 @@ class UserMvcControllerTest {
         Customer customer = data.getCustomerList().get(0);
 
         when(userService.getCustomerById(anyString())).thenReturn(customer);
-
-        mvc.perform(MockMvcRequestBuilders.get(URL + "renew/customer"))
+        mvc.perform(MockMvcRequestBuilders.get(URL + "renew/customer/" + customer.getId()))
 
                 .andExpect(MockMvcResultMatchers.status().isOk())
-                .andExpect(MockMvcResultMatchers.view().name("pages/registration"))
+                .andExpect(MockMvcResultMatchers.view().name("pages/staff/user-info"))
                 .andReturn();
     }
 

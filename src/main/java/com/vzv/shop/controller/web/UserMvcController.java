@@ -61,9 +61,11 @@ public class UserMvcController {
         return "pages/delivery-address";
     }
 
-    @GetMapping("renew/customer")
-    public String openUpdatePage() {
-        return "pages/registration";
+    @GetMapping("renew/customer/{id}")
+    public String openUpdatePage(@PathVariable("id") String id, Model model) {
+        Customer customer = userService.getCustomerById(id);
+        model.addAttribute("customer", customer);
+        return "pages/staff/user-info";
     }
 
     @PutMapping(value = "address/renew/{userId}", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -77,6 +79,4 @@ public class UserMvcController {
         model.addAttribute("customer", userService.getCustomerById(id));
         return "pages/basket-page";
     }
-
-
 }

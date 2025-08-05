@@ -85,55 +85,5 @@
 
 </script>
 
-<script name="empty">
-    // async function replaceOptions(elemId) {
-    //     let unique = [];
-    //     let elem = document.getElementById(elemId);
-    //     if (!elem.options) {
-    //         return;
-    //     }
-    //     const sltd = elem.options[elem.selectedIndex];
-    //     elem.innerHTML = '';
-    //     elem.appendChild(Object.assign(document.createElement('option'),
-    //             {value:'none', text:'-Не выбрано-', selected:sltd.value === 'none'}));
-    //     productsFromServer.forEach(p => {
-    //         let trimmed = typeof p[elemId] === 'string' ? p[elemId].trim() : p[elemId];
-    //         if (!unique.includes(trimmed)){
-    //             unique.push(trimmed);
-    //             elem.appendChild(Object.assign(document.createElement('option'), {
-    //                 value: trimmed,
-    //                 text: enumsRu[trimmed] ? enumsRu[trimmed] : trimmed,
-    //                 selected: trimmed === sltd.value,
-    //             }) );
-    //         }
-    //     });
-    // }
-
-    // function showHideSideBarFields(value) {
-    //     let sideBarFields = ['model', 'frameType', 'frameSize', 'gender',
-    //         'lensType', 'distance', 'coeff', 'sp', 'cyl', 'volume'];
-    //     for (let id of sideBarFields) {
-    //         let elem = el(id);
-    //         elem.hidden = true;
-    //         document.querySelector(`label[for=${id}]`).hidden = true;
-    //     }
-    //     switch (value){
-    //         case 'frame' : sideBarFields = ['model', 'frameType', 'frameSize', 'gender']; break;
-    //         case 'ready-glasses' :
-    //             sideBarFields = ['model', 'frameType', 'frameSize', 'gender', 'lensType', 'sp', 'distance'];
-    //             break;
-    //         case 'lens' : sideBarFields = ['lensType', 'coeff', 'sp', 'cyl']; break;
-    //         case 'liquid' : sideBarFields = ['volume']; break;
-    //         case 'medical-equipment' : sideBarFields = ['model']; break;
-    //         default : sideBarFields = []; break;
-    //     }
-    //     for (let sideBarField of sideBarFields) {
-    //         document.querySelector(`label[for=${sideBarField}]`).hidden = false;
-    //         el(sideBarField).hidden = false;
-    //         el(sideBarField).value = '';
-    //     }
-    // }
-</script>
-
 </body>
 </html>

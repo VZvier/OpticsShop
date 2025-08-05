@@ -334,8 +334,8 @@
         <datalist id="userListSuggestions"></datalist>
         <li class="sub-link" onclick="window.location='/shop/api/users/page/' + el('idOfFoundUser').value"><u>Показать пользователя</u></li>
         <li class="sub-link" onclick="window.location='/shop/orders/by-user-id/' + el('idOfFoundUser').value"><u>Показать заказы пользователя</u></li>
-        <li class="sub-link" onclick="window.location='/shop/api/users/page/' + el('idOfFoundUser').value"><u>Редактировать пользователя</u></li>
-        <li class="sub-link" onclick="window.location='/shop/api/new-users/page'"><u>Создать пользователя</u></li>
+        <li class="sub-link" onclick="window.location='/shop/api/users/renew/customer/' + el('idOfFoundUser').value"><u>Редактировать пользователя</u></li>
+        <li class="sub-link" onclick="window.location='/shop/api/users/new'"><u>Создать пользователя</u></li>
         <li class="sub-link" id="rmUser" onclick="removeEntity(this, el('idOfFoundUser').value )">
             <u>Удалить пользователя</u>
         </li>
@@ -774,10 +774,12 @@
         function activateMenuListener(insertableId, isForSale){
             el('sideMenu').style.display = el('sideMenu').style.display === 'none' ? 'block' : 'none';
             el('mainField').style.left = el('sideMenu').style.display === 'none' ? '0' : '230px';
+            el('insertable').style.width = el('sideMenu').style.display === 'none' ? '97vw' : '85vw';
             if (el('#spare-insertable')){
                 createGoods(allProducts, insertableId, isForSale);
                 elemsAsArray('.goods-baw').forEach(e => e.style.display = 'none');
                 el('#spare-insertable').style.display = el('sideMenu').style.display === 'none' ? 'none' : 'block';
+                el('spare-insertable').style.width = el('sideMenu').style.display === 'none' ? '97vw' : '85vw';
                 el('insertable').style.display = el('spare-insertable').style.display === 'none' ? 'block' : 'none';
             }
             showHideProductSearchFields();
